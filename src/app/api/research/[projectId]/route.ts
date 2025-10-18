@@ -1,19 +1,17 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
 
-interface RouteParams {
-  params: {
-    projectId: string;
-  };
-}
-
-export async function GET(_: Request, { params }: RouteParams) {
+export async function GET(
+  _: Request,
+  context: { params: Promise<{ projectId: string }> }
+) {
   try {
+    const { projectId } = await context.params;
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from("research_projects")
       .select("*")
-      .eq("id", params.projectId)
+      .eq("id", projectId)
       .single();
 
     if (error) {

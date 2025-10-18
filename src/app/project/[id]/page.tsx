@@ -8,9 +8,9 @@ import { verdictToVariant } from "@/lib/verdict";
 import type { ResearchGeneratedData } from "@/types/research";
 
 interface ProjectPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 async function fetchProject(id: string) {
@@ -28,9 +28,12 @@ async function fetchProject(id: string) {
   return data;
 }
 
-export default async function ProjectDetailPage({ params }: ProjectPageProps) {
+export default async function ProjectDetailPage({
+  params,
+}: ProjectPageProps) {
   try {
-    const project = await fetchProject(params.id);
+    const { id } = await params;
+    const project = await fetchProject(id);
     if (!project) {
       return notFound();
     }
