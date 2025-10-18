@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Realwebwins Research System
 
-## Getting Started
+## Setup
+- Copy `.env.local.example` to `.env.local`.
+- Provide the following environment variables:
+  - `SUPABASE_URL`
+  - `SUPABASE_ANON_KEY`
+  - Optionally `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` to enable analytics.
+- Install dependencies with `npm install`.
 
-First, run the development server:
+## Local Development
+- Run `npm run dev` and open `http://localhost:3000`.
+- When Supabase credentials are missing, a local JSON-backed stub is used so you can prototype without network access.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Analytics
+- The layout ships with [Plausible](https://plausible.io) tracking. Set `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` (for example, `realwebwins.app`) in both local and production environments.
+- Once the variable is present, page views for `/research` and `/dashboard` are tracked automatically—no extra code changes required.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Feedback Storage
+- Feedback submissions are persisted to Supabase table `feedback`. Create it with:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+  ```sql
+  create table feedback (
+    id uuid primary key default gen_random_uuid(),
+    name text,
+    message text not null,
+    rating int,
+    created_at timestamptz not null default now()
+  );
+  ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Ensure your Supabase Row Level Security policies allow inserts for the application role, or rely on the local stub in development.
 
-## Learn More
+## Testing
+- End-to-end tests use [Playwright](https://playwright.dev/).
+  - Install browsers once: `npx playwright install`
+  - Run the suite: `npm run test`
+- The configuration starts `npm run dev` on an ephemeral port and covers the `/research` submission flow end-to-end, including dashboard verification.
+- Vercel preview builds can run the same command to catch regressions before production deploys.
 
-To learn more about Next.js, take a look at the following resources:
+## Deploying on Vercel
+1. Push the repository to GitHub.
+2. In Vercel, import the repo and select the `main` branch.
+3. Set environment variables:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (required for server-side inserts when not using the stub)
+   - `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` (optional analytics)
+4. Deploy—Vercel runs `npm run build` and serves the standalone output automatically.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

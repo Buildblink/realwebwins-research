@@ -1,7 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,12 +29,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const currentYear = new Date().getFullYear();
+  const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
 
   return (
     <html lang="en">
       <body
         className={`${inter.variable} ${spaceGrotesk.variable} bg-background text-foreground antialiased`}
       >
+        {plausibleDomain ? (
+          <Script
+            src="https://plausible.io/js/script.js"
+            data-domain={plausibleDomain}
+            strategy="lazyOnload"
+          />
+        ) : null}
         <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10">
           <header className="mb-12 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -60,6 +70,7 @@ export default function RootLayout({
             Built with Next.js, Supabase, and Claude (mocked) - (c) {currentYear} RealWebWins
           </footer>
         </div>
+        <FeedbackWidget />
       </body>
     </html>
   );

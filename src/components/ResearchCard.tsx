@@ -1,4 +1,5 @@
-﻿import Link from "next/link";
+'use client';
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";

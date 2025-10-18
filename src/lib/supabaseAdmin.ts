@@ -1,14 +1,19 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import {
+  supabase as stubSupabase,
+  isSupabaseStub,
+  type SupabaseAdapter,
+} from "@/lib/supabaseClient";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 let client: SupabaseClient | null = null;
 
-export function getSupabaseAdminClient(): SupabaseClient {
-  if (!supabaseUrl) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_URL is not set");
+export function getSupabaseAdminClient(): SupabaseClient & SupabaseAdapter {
+  if (!supabaseUrl || !serviceRoleKey || isSupabaseStub) {
+    return stubSupabase as unknown as SupabaseClient & SupabaseAdapter;
   }
 
   if (!client) {
@@ -20,5 +25,5 @@ export function getSupabaseAdminClient(): SupabaseClient {
     });
   }
 
-  return client;
+  return client as unknown as SupabaseClient & SupabaseAdapter;
 }

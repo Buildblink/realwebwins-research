@@ -23,6 +23,10 @@
 # misc
 .DS_Store
 *.pem
+devserver.log
+.data/
+playwright-report/
+test-results/
 
 # debug
 npm-debug.log*
