@@ -1,4 +1,4 @@
-ssimport { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { generateResearchInsights } from "@/lib/anthropicClient";
 import { formatResearchMarkdown } from "@/lib/researchFormatter";
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
