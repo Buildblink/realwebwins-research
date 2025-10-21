@@ -6,7 +6,7 @@ import { Sparkles, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingState } from "@/components/LoadingState";
-import { ReportViewer } from "@/components/ReportViewer";
+import ReportViewer from "@/components/ReportViewer";
 
 interface ResearchResponse {
   projectId: string;
@@ -137,12 +137,16 @@ export function IdeaResearchForm() {
                 Verdict
               </p>
               <p className="font-heading text-2xl font-semibold text-foreground">
-                {report.verdict.replace("_", " ").toUpperCase()} -{" "}
-                <span className="text-primary">{report.score.toFixed(1)}/10</span>
+                {(report.verdict ?? "pending").replace("_", " ").toUpperCase()} -{" "}
+                <span className="text-primary">
+                  {Number.isFinite(report.score)
+                    ? `${report.score.toFixed(1)}/10`
+                    : "--/10"}
+                </span>
               </p>
             </div>
             <Button asChild variant="secondary">
-              <a href={`/project/${report.projectId}`}>Open in vault</a>
+              <a href={`/project/${report.projectId ?? ""}`}>Open in vault</a>
             </Button>
           </div>
           <ReportViewer markdown={report.reportMarkdown} />

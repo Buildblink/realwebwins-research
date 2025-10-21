@@ -27,6 +27,7 @@ devserver.log
 .data/
 playwright-report/
 test-results/
+exports/
 
 # debug
 npm-debug.log*

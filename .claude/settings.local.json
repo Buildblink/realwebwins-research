@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run ensure:pain-points:*)",
+      "Bash(npm run seed:playbooks:*)",
+      "Bash(npm run test:playbooks:*)",
+      "Bash(npm run seed:consumer-pain-points:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

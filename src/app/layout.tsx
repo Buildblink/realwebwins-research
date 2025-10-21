@@ -59,6 +59,18 @@ export default function RootLayout({
               </Link>
               <Link
                 className="rounded-lg px-3 py-2 hover:bg-foreground/5"
+                href="/pain-points"
+              >
+                Pain Points
+              </Link>
+              <Link
+                className="rounded-lg px-3 py-2 hover:bg-foreground/5"
+                href="/cases"
+              >
+                Cases
+              </Link>
+              <Link
+                className="rounded-lg px-3 py-2 hover:bg-foreground/5"
                 href="/dashboard"
               >
                 Dashboard

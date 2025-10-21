@@ -1,0 +1,153 @@
+# Realwebwins Research — Private Insights Vault (v0.3)
+
+## 🎯 Goal
+Create a **private Insights Vault** for the founder dashboard — a single place to view, search, and analyze all generated projects (Research → Action Plan → Playbook).  
+Includes analytics summaries, tag filters, and private access control.
+
+---
+
+## 🧠 General Instructions
+- Follow the same structure used for `dashboard` and `project/[id]` pages.
+- Vault is **private**: only accessible to the logged-in admin user (no public RLS yet).
+- Integrate existing Supabase tables: `research_projects`, `ActionPlans`, `Playbooks`, and `AgentStatus`.
+- Add analytics (counts + conversion funnel) and tag filtering.
+
+---
+
+## 1️⃣ Backend: /api/vault Endpoint
+**Create file:** `src/app/api/vault/route.ts`
+
+- Accepts optional query params: `?tag=`, `?stage=`, `?q=`.
+- Aggregates joined data from Supabase tables:
+  - project title, idea_description
+  - Build Score / Confidence Score
+  - has_action_plan, has_playbook (booleans)
+  - latest updated_at timestamps
+- Returns JSON summary with pagination.
+
+---
+
+## 2️⃣ Supabase Schema Updates
+**Add (if missing):** `tags` text[] column to `research_projects` table.
+
+SQL:
+```sql
+alter table public.research_projects
+add column if not exists tags text[] default '{}';
+```
+
+Ensure read/write policies still apply only to `service_role` for now.
+
+---
+
+## 3️⃣ Frontend: Vault Page
+**Create file:** `src/app/vault/page.tsx`
+
+Features:
+- Header: “Insights Vault” + search bar
+- Filter chips: All / SaaS / Etsy / YouTube / Substack / Gumroad / Other
+- Stage filters: Research / Action Plan / Playbook Complete
+- Analytics summary cards (top of page):
+  - Total Projects
+  - % with Action Plan
+  - % with Playbook
+  - Avg Confidence Score
+- Results grid (cards):
+  - Project title + short description
+  - Tags
+  - Stage badges (e.g., ✅ Research, 🚧 Plan, 📢 Playbook)
+  - “View Project” button → `/project/[id]`
+
+Style: same visual hierarchy and Tailwind layout as dashboard.
+
+---
+
+## 4️⃣ Components
+**Create / Update:**
+- `src/components/VaultAnalytics.tsx` → reusable summary cards (counts, %)
+- `src/components/VaultFilters.tsx` → tag/stage filter bar
+- `src/components/VaultResults.tsx` → paginated grid using `ResearchCard`
+- `src/components/VaultSearchBar.tsx` → controlled input for live filtering
+
+---
+
+## 5️⃣ Analytics Logic
+**Create file:** `src/lib/analytics.ts`
+
+Expose helper functions:
+```ts
+export function calculateVaultStats(projects: any[]) {
+  const total = projects.length;
+  const withPlan = projects.filter(p => p.has_action_plan).length;
+  const withPlaybook = projects.filter(p => p.has_playbook).length;
+  const avgConfidence = Math.round(
+    projects.reduce((acc, p) => acc + (p.confidence_score || 0), 0) / (total || 1)
+  );
+  return {
+    total,
+    withPlan,
+    withPlaybook,
+    avgConfidence,
+    conversionRate: Math.round((withPlaybook / total) * 100),
+  };
+}
+```
+
+Display these metrics on the Vault page.
+
+---
+
+## 6️⃣ Private Access Setup
+**For now:**
+- No auth UI — restrict Vault route server-side:
+  - In `src/app/vault/page.tsx`, check for a `process.env.ADMIN_MODE` flag.
+  - If missing, redirect to home.
+- Later, swap for Supabase Auth (GitHub or magic link login).
+
+---
+
+## 7️⃣ Types
+Extend `src/types/supabase.ts`:
+```ts
+export interface VaultProjectSummary {
+  id: string;
+  idea_description: string;
+  tags: string[];
+  confidence_score: number | null;
+  has_action_plan: boolean;
+  has_playbook: boolean;
+  created_at: string;
+  updated_at: string;
+}
+```
+
+---
+
+## ✅ Validation Steps
+1. `npm run build`
+2. Run SQL migrations manually in Supabase if needed (`tags` column).
+3. Test endpoint:
+   ```bash
+   curl https://realwebwins-research.vercel.app/api/vault
+   ```
+   → should return aggregated summaries.
+4. Visit `/vault` in browser → analytics + filters visible.
+5. Verify filters, search, and counts update dynamically.
+
+---
+
+## 🚀 Future Enhancements
+- Add “Public toggle” column to research_projects for sharing.
+- Enable `/vault/public` with public RLS + caching.
+- Export Vault analytics as CSV or Notion dashboard.
+- Add trend charts (projects per week, average Build Score).
+
+---
+
+## 🔧 Commands
+Add to package.json:
+```json
+"scripts": {
+  "ensure:vault": "node scripts/createVaultHelpers.mjs"
+}
+```

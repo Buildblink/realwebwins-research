@@ -1,0 +1,182 @@
+[
+  {
+    "text": "I can't tell which product reviews are real on Amazon anymore",
+    "category": "Trust",
+    "niche": "Online Shopping",
+    "source": "Reddit",
+    "audience": "consumer",
+    "frequency": 87,
+    "proof_link": "https://reddit.com/r/amazon"
+  },
+  {
+    "text": "Meal planners never account for my food allergies and restrictions",
+    "category": "Personalization",
+    "niche": "Health/Food",
+    "source": "Reddit",
+    "audience": "consumer",
+    "frequency": 64,
+    "proof_link": "https://reddit.com/r/mealprep"
+  },
+  {
+    "text": "Online courses are so boring - I stop watching after 2 videos",
+    "category": "Retention",
+    "niche": "Learning",
+    "source": "Reddit",
+    "audience": "consumer",
+    "frequency": 93,
+    "proof_link": "https://reddit.com/r/OnlineLearning"
+  },
+  {
+    "text": "Too many budgeting apps but none sync with my local bank",
+    "category": "Finance",
+    "niche": "Productivity",
+    "source": "IndieHackers",
+    "audience": "consumer",
+    "frequency": 71,
+    "proof_link": "https://indiehackers.com"
+  },
+  {
+    "text": "AI chatbots always sound robotic in customer support chats",
+    "category": "Experience",
+    "niche": "SaaS",
+    "source": "Reddit",
+    "audience": "consumer",
+    "frequency": 58,
+    "proof_link": "https://reddit.com/r/CustomerService"
+  },
+  {
+    "text": "I waste hours comparing flight prices across different sites",
+    "category": "Efficiency",
+    "niche": "Travel",
+    "source": "Reddit",
+    "audience": "consumer",
+    "frequency": 82,
+    "proof_link": "https://reddit.com/r/travel"
+  },
+  {
+    "text": "Newsletter subscriptions clutter my inbox - I can't organize them",
+    "category": "Productivity",
+    "niche": "Email",
+    "source": "X",
+    "audience": "consumer",
+    "frequency": 76,
+    "proof_link": "https://x.com"
+  },
+  {
+    "text": "Fitness apps don't adapt when I miss workouts or get injured",
+    "category": "Personalization",
+    "niche": "Health/Fitness",
+    "source": "Reddit",
+    "audience": "consumer",
+    "frequency": 69,
+    "proof_link": "https://reddit.com/r/fitness"
+  },
+  {
+    "text": "I can't find a password manager that's both secure and easy to use",
+    "category": "Security",
+    "niche": "Productivity",
+    "source": "IndieHackers",
+    "audience": "consumer",
+    "frequency": 55,
+    "proof_link": "https://indiehackers.com"
+  },
+  {
+    "text": "Recipe apps never tell me what to do with leftover ingredients",
+    "category": "Waste",
+    "niche": "Health/Food",
+    "source": "Reddit",
+    "audience": "consumer",
+    "frequency": 61,
+    "proof_link": "https://reddit.com/r/Cooking"
+  },
+  {
+    "text": "Streaming services make it impossible to find something to watch",
+    "category": "Discovery",
+    "niche": "Entertainment",
+    "source": "Reddit",
+    "audience": "consumer",
+    "frequency": 84,
+    "proof_link": "https://reddit.com/r/streaming"
+  },
+  {
+    "text": "Job boards show the same outdated postings for weeks",
+    "category": "Trust",
+    "niche": "Career",
+    "source": "X",
+    "audience": "consumer",
+    "frequency": 72,
+    "proof_link": "https://x.com"
+  },
+  {
+    "text": "Language learning apps are too gamified - I don't actually learn",
+    "category": "Effectiveness",
+    "niche": "Learning",
+    "source": "Reddit",
+    "audience": "consumer",
+    "frequency": 67,
+    "proof_link": "https://reddit.com/r/languagelearning"
+  },
+  {
+    "text": "Appointment booking systems never show real-time availability",
+    "category": "Efficiency",
+    "niche": "Services",
+    "source": "Reddit",
+    "audience": "consumer",
+    "frequency": 78,
+    "proof_link": "https://reddit.com/r/mildlyinfuriating"
+  },
+  {
+    "text": "Podcast apps don't let me easily clip and share interesting moments",
+    "category": "Sharing",
+    "niche": "Entertainment",
+    "source": "X",
+    "audience": "consumer",
+    "frequency": 52,
+    "proof_link": "https://x.com"
+  },
+  {
+    "text": "Pet care apps don't remind me about vet appointments or medications",
+    "category": "Organization",
+    "niche": "Pets",
+    "source": "Reddit",
+    "audience": "consumer",
+    "frequency": 48,
+    "proof_link": "https://reddit.com/r/dogs"
+  },
+  {
+    "text": "Investment apps use too much jargon - I need plain English",
+    "category": "Education",
+    "niche": "Finance",
+    "source": "Reddit",
+    "audience": "consumer",
+    "frequency": 81,
+    "proof_link": "https://reddit.com/r/personalfinance"
+  },
+  {
+    "text": "Home organization apps don't work for small apartments with no storage",
+    "category": "Practicality",
+    "niche": "Home",
+    "source": "Reddit",
+    "audience": "consumer",
+    "frequency": 59,
+    "proof_link": "https://reddit.com/r/organization"
+  },
+  {
+    "text": "Event ticketing sites add so many fees at checkout - feels like a scam",
+    "category": "Pricing",
+    "niche": "Entertainment",
+    "source": "X",
+    "audience": "consumer",
+    "frequency": 91,
+    "proof_link": "https://x.com"
+  },
+  {
+    "text": "Mental health apps feel impersonal and can't replace real therapy",
+    "category": "Experience",
+    "niche": "Health/Wellness",
+    "source": "Reddit",
+    "audience": "consumer",
+    "frequency": 74,
+    "proof_link": "https://reddit.com/r/mentalhealth"
+  }
+]

@@ -1,8 +1,6 @@
-import { NextResponse } from "next/server";
-import { generateResearchInsights } from "@/lib/anthropicClient";
-import { formatResearchMarkdown } from "@/lib/researchFormatter";
+﻿import { NextResponse } from "next/server";
+import { researchAgent } from "@/lib/researchAgent";
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
-import type { ResearchGeneratedData } from "@/types/research";
 
 interface ResearchCreatePayload {
   ideaDescription?: string;
@@ -25,11 +23,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const insights = await generateResearchInsights(ideaDescription);
-    const reportMarkdown = formatResearchMarkdown(ideaDescription, insights);
+    const { insights, reportMarkdown, completedAt } = await researchAgent({
+      idea: ideaDescription,
+    });
 
     const supabase = getSupabaseAdminClient();
-
     const { data, error } = await supabase
       .from("research_projects")
       .insert([
@@ -40,8 +38,8 @@ export async function POST(req: Request) {
           score: insights.verdict.score,
           verdict: insights.verdict.label,
           confidence: insights.verdict.confidence,
-          research_json: insights as ResearchGeneratedData,
           research_report: reportMarkdown,
+          research_json: insights,
         },
       ])
       .select("*")
@@ -49,6 +47,27 @@ export async function POST(req: Request) {
 
     if (error) {
       throw error;
+    }
+
+    const storagePayload = {
+      projectId: data.id,
+      userId,
+      ideaDescription,
+      insights,
+      reportMarkdown,
+      createdAt: completedAt,
+    };
+
+    const storagePath = `reports/${data.id}.json`;
+    const { error: storageError } = await supabase.storage
+      .from("reports")
+      .upload(storagePath, Buffer.from(JSON.stringify(storagePayload, null, 2)), {
+        contentType: "application/json",
+        upsert: true,
+      });
+
+    if (storageError) {
+      console.error("[research.create] failed to upload report", storageError);
     }
 
     return NextResponse.json({

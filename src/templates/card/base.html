@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{title}} · Realwebwins Case Card</title>
+    <style>
+      {{{style}}}
+    </style>
+  </head>
+  <body>
+    <div class="card" style="background: linear-gradient(135deg, {{background_color}} 0%, {{accent_color}} 100%);">
+      <div class="card-inner">
+        <header class="card-header">
+          {{#icon_data_url}}
+            <img class="platform-icon" src="{{{icon_data_url}}}" alt="{{platform}} icon" />
+          {{/icon_data_url}}
+          <div class="card-meta">
+            <span class="card-platform">{{platform}}</span>
+            <span class="card-timestamp">{{timestamp}}</span>
+          </div>
+        </header>
+
+        <main class="card-body">
+          <h1 class="card-title">{{title}}</h1>
+          <div class="card-score">
+            <span class="score-value">{{score_text}}</span>
+            <span class="score-pill">{{verified_text}}</span>
+          </div>
+          {{#summary}}
+            <p class="card-summary">{{summary}}</p>
+          {{/summary}}
+        </main>
+
+        <footer class="card-footer">
+          {{#proof_link}}
+            <div class="proof-block">
+              <span class="proof-label">Proof</span>
+              <a class="proof-link" href="{{proof_link}}">{{short_proof}}</a>
+            </div>
+          {{/proof_link}}
+          {{#qr_data_url}}
+            <img class="card-qr" src="{{{qr_data_url}}}" alt="Proof QR code" />
+          {{/qr_data_url}}
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>

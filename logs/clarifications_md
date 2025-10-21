@@ -1,0 +1,105 @@
+# ✅ REALWEBWINS PHASE 1 CLARIFICATIONS
+
+## Purpose
+Clear direction for the coder before starting Phase 1 (Database + API) of the PainPoint Explorer build.
+
+---
+
+## 1️⃣ Data Source Priority
+
+Start lean with text-rich sources.
+
+**Priority order:**
+1. **Reddit (Main Source)**  
+   Subreddits to target:
+   ```
+   r/Entrepreneur
+   r/IndieHackers
+   r/SideProject
+   r/SmallBusiness
+   r/Freelance
+   r/YouTubers
+   r/EtsySellers
+   r/ContentCreators
+   ```
+   Query terms: “struggling”, “can’t”, “how do I”, “problem”, “stuck”, “need help”.
+
+2. **IndieHackers** — via RSS or simple HTML scrape (Ask IH, Milestones).  
+3. **X / Twitter** — add later in Phase 3 (manual seeding from top accounts).  
+4. **Other** — Quora/ProductHunt optional later.
+
+✅ Begin with **Reddit + IndieHackers**.
+
+---
+
+## 2️⃣ Initial Scope
+
+**Answer: B — Start with manual seeding (CSV/JSON upload).**  
+- Skip full scraping automation for MVP.
+- Seed ~50–100 curated pain points manually (CSV → Supabase import).
+- Phase 2: Automate daily scraping via `fetchPainPoints.mjs`.
+
+---
+
+## 3️⃣ Playbook Strategy
+
+**Hybrid approach.**
+
+| Source | Strategy | Notes |
+|---------|-----------|-------|
+| Existing research_projects | Auto-generate short playbooks from verified data | Use LLM summaries to create actionable “mini playbooks.” |
+| Manual additions | Founder-curated & affiliate-ready | Written/edited later for tone & quality. |
+| AI-only | ❌ Not at this stage | Quality must be reviewed manually. |
+
+Start with short AI drafts, then enrich manually.
+
+---
+
+## 4️⃣ Existing Research Projects
+
+**Keep and integrate, don’t replace.**
+- Maintain existing validation flow.  
+- Later: extract pain points from research reports into the `pain_points` table.  
+- These will serve as “proof cases” linked from playbooks.
+
+So: **Pain Points = Discovery Layer**, **Research Projects = Proof Layer.**
+
+---
+
+## 5️⃣ Homepage Strategy
+
+**Answer: B — Add a PainPoint section, keep current research validator.**
+- Hero: “What’s holding you back?” search bar.  
+- Below: Trending pain points grid.  
+- Keep “Validate your idea” CTA (Realwebwins Validator).  
+- Phase 3 → full redesign around the Explorer.
+
+---
+
+## 6️⃣ Phase 1 Build Instructions
+
+Proceed with **Phase 1: Database + API** under these assumptions:
+
+- Create `pain_points` table (see REALWEBWINS_CORE_REFRAME_PLAN.md schema).
+- Implement `/api/pain-points?search=&niche=&category=` endpoint.
+- Allow manual CSV import or Supabase UI seeding.
+- Optional CLI: `scripts/seedPainPoints.mjs` for local testing.
+
+---
+
+## ✅ Summary of Build Direction
+
+| Area | Decision |
+|------|-----------|
+| Data sources | Start with Reddit + IndieHackers |
+| Initial population | Manual CSV/JSON seeding |
+| Playbooks | Hybrid (AI-generated + manual edits) |
+| Research projects | Keep + integrate later |
+| Homepage | Add PainPoints section now |
+| Next step | Proceed with Phase 1 (DB + API) |
+
+---
+
+**Outcome:**  
+Coder can safely build Phase 1 (database + API + basic frontend wiring) without ambiguity.  
+Manual seed data will validate UI and search before automation begins.

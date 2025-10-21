@@ -1,11 +1,37 @@
+import { generateAIResponse } from "@/lib/aiProvider";
 import type { ResearchGeneratedData } from "@/types/research";
 
-/**
- * Mocked Claude API integration. Replace with a real Anthropic client once API access is available.
- */
-export async function generateResearchInsights(
-  ideaDescription: string
-): Promise<ResearchGeneratedData> {
+type Provider = "anthropic" | "openrouter" | "ollama" | "local";
+
+function resolveProvider(): Provider {
+  const value = process.env.AI_PROVIDER?.toLowerCase();
+  if (value === "anthropic" || value === "openrouter" || value === "ollama") {
+    return value;
+  }
+  return "local";
+}
+
+function sanitizeJsonPayload(payload: string): string {
+  const trimmed = payload.trim();
+  if (trimmed.startsWith("```")) {
+    return trimmed
+      .replace(/^```json/i, "")
+      .replace(/^```/, "")
+      .replace(/```$/, "")
+      .trim();
+  }
+  return trimmed;
+}
+
+function isResearchGeneratedData(value: unknown): value is ResearchGeneratedData {
+  if (!value || typeof value !== "object") return false;
+  const data = value as Record<string, unknown>;
+  if (!data.verdict || typeof data.verdict !== "object") return false;
+  const verdict = data.verdict as Record<string, unknown>;
+  return typeof verdict.score === "number" && typeof verdict.label === "string";
+}
+
+function generateMockInsights(ideaDescription: string): ResearchGeneratedData {
   const normalizedIdea = ideaDescription.trim();
   const lengthFactor = Math.min(normalizedIdea.length / 100, 1);
 
@@ -74,4 +100,51 @@ export async function generateResearchInsights(
       "Offer concierge research for first ten paying users",
     ],
   };
+}
+
+export async function generateResearchInsights(
+  ideaDescription: string
+): Promise<ResearchGeneratedData> {
+  const provider = resolveProvider();
+  if (provider === "local") {
+    return generateMockInsights(ideaDescription);
+  }
+
+  const prompt = `You are RealWebWins research analyst. Generate a structured JSON report answering for the founder idea below.
+Return ONLY valid JSON matching this TypeScript type:
+{
+  "verdict": { "score": number, "label": string, "confidence": "low"|"medium"|"high", "summary": string },
+  "market_size": { "tam": string, "growth": string },
+  "competition": Array<{ "name": string, "price"?: string, "differentiator"?: string }>,
+  "pain_points": string[],
+  "trends": { "keyword": string, "trend": string, "notes"?: string },
+  "monetization": { "model": string, "price_suggestion"?: string, "channels"?: string[] },
+  "build_complexity": { "difficulty": number, "weeks": number, "stack": string[] },
+  "go_to_market": string[]
+}
+Idea: ${ideaDescription}`;
+
+  try {
+    const aiResponse = await generateAIResponse(prompt, {
+      model: process.env.AI_RESEARCH_MODEL,
+    });
+    const sanitized = sanitizeJsonPayload(aiResponse);
+    const parsed = JSON.parse(sanitized) as unknown;
+
+    if (isResearchGeneratedData(parsed)) {
+      return parsed;
+    }
+
+    console.warn(
+      "[generateResearchInsights] AI response missing required fields, falling back to mock.",
+      parsed
+    );
+    return generateMockInsights(ideaDescription);
+  } catch (error) {
+    console.warn(
+      "[generateResearchInsights] AI provider failed, falling back to mock.",
+      error
+    );
+    return generateMockInsights(ideaDescription);
+  }
 }
