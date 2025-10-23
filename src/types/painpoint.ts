@@ -48,6 +48,7 @@ export interface PainPointFilters {
   niche?: string;
   source?: string;
   audience?: string;
+  hasPlaybook?: boolean;
   page?: number;
   pageSize?: number;
 }

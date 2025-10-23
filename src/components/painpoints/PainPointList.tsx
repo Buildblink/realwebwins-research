@@ -37,6 +37,7 @@ export function PainPointList({
   const niche = searchParams.get("niche") || "";
   const source = searchParams.get("source") || "";
   const audience = searchParams.get("audience") || "";
+  const hasPlaybook = searchParams.get("hasPlaybook") === "true";
   const page = parseInt(searchParams.get("page") || "1", 10);
 
   // Update URL with new params
@@ -74,6 +75,7 @@ export function PainPointList({
       if (niche) params.set("niche", niche);
       if (source) params.set("source", source);
       if (audience) params.set("audience", audience);
+      if (hasPlaybook) params.set("hasPlaybook", "true");
       params.set("page", page.toString());
       params.set("pageSize", "20");
 
@@ -101,7 +103,7 @@ export function PainPointList({
     } finally {
       setIsLoading(false);
     }
-  }, [search, category, niche, source, audience, page]);
+  }, [search, category, niche, source, audience, hasPlaybook, page]);
 
   // Fetch on mount or when filters change
   useEffect(() => {
@@ -126,12 +128,16 @@ export function PainPointList({
           selectedNiche={niche}
           selectedSource={source}
           selectedAudience={audience}
+          hasPlaybook={hasPlaybook}
           onCategoryChange={(value) => updateFilters({ category: value })}
           onNicheChange={(value) => updateFilters({ niche: value })}
           onSourceChange={(value) => updateFilters({ source: value })}
           onAudienceChange={(value) => updateFilters({ audience: value })}
+          onHasPlaybookChange={(checked) =>
+            updateFilters({ hasPlaybook: checked ? "true" : "" })
+          }
         />
-        {(search || category || niche || source || audience) && (
+        {(search || category || niche || source || audience || hasPlaybook) && (
           <button
             onClick={() => router.push("/pain-points", { scroll: false })}
             className="text-sm text-primary hover:underline"
@@ -145,7 +151,7 @@ export function PainPointList({
       {data && (
         <div className="text-sm text-slate-600">
           Showing {data.data.length} of {data.total} pain points
-          {(search || category || niche || source || audience) && " (filtered)"}
+          {(search || category || niche || source || audience || hasPlaybook) && " (filtered)"}
         </div>
       )}
 

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPainPointById } from "@/lib/painpoints/queryPainPoints";
 import { fetchVaultProjectDetail } from "@/lib/vaultData";
+import { PainPointDetailTracker } from "@/components/painpoints/PainPointDetailTracker";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,13 @@ export default async function PainPointDetailPage(props: PageProps) {
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-12">
+      <PainPointDetailTracker
+        painPointId={painPoint.id}
+        category={painPoint.category}
+        niche={painPoint.niche}
+        text={painPoint.text}
+      />
+
       {/* Back Navigation */}
       <Link
         href="/pain-points"
@@ -69,17 +77,17 @@ export default async function PainPointDetailPage(props: PageProps) {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex flex-wrap gap-2">
               {painPoint.category && (
-                <Badge variant="outline" className={`${categoryColor} border`}>
+                <Badge variant="neutral" className={`${categoryColor} border`}>
                   {painPoint.category}
                 </Badge>
               )}
               {painPoint.niche && (
-                <Badge variant="outline" className="border-slate-200">
+                <Badge variant="neutral" className="border-slate-200">
                   {painPoint.niche}
                 </Badge>
               )}
               {painPoint.source && (
-                <Badge variant="outline" className="border-slate-300">
+                <Badge variant="neutral" className="border-slate-300">
                   Source: {painPoint.source}
                 </Badge>
               )}

@@ -65,6 +65,12 @@ export default function RootLayout({
               </Link>
               <Link
                 className="rounded-lg px-3 py-2 hover:bg-foreground/5"
+                href="/showcase"
+              >
+                Showcase
+              </Link>
+              <Link
+                className="rounded-lg px-3 py-2 hover:bg-foreground/5"
                 href="/cases"
               >
                 Cases

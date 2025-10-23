@@ -31,12 +31,12 @@ export function PlaybookCard({ playbook }: PlaybookCardProps) {
       <CardHeader className="pb-3">
         <div className="flex flex-wrap gap-2">
           {playbook.category && (
-            <Badge variant="outline" className={`${categoryColor} border`}>
+            <Badge variant="neutral" className={`${categoryColor} border`}>
               {playbook.category}
             </Badge>
           )}
           {playbook.niche && (
-            <Badge variant="outline" className="border-slate-200">
+            <Badge variant="neutral" className="border-slate-200">
               {playbook.niche}
             </Badge>
           )}
