@@ -244,6 +244,50 @@ LIMIT 10;
 **Issue:** "UNIQUE constraint violation"
 - **Solution:** Cron tried to insert duplicate week - this is expected for retries
 
+## Internal Analytics Dashboard (Phase 15.2)
+
+**Route:** `/dashboard/analytics`
+
+### What it shows
+
+- **KPIs:** Latest week totals for Remix, Referral, Affiliate metrics + cumulative Credits
+- **Charts:** Weekly time-series for all 4 metrics (last N weeks, configurable)
+- **Recent Logs:** Last 10 `AgentStatus` entries for viral-growth runs
+
+### How it works
+
+- UI fetches `/api/analytics/dashboard?weeks=8` (default 8 weeks, max 26)
+- API queries `analytics_metrics` table (created in Phase 15.1)
+- Returns timeseries data + totals + AgentStatus logs
+- Dashboard renders 4 KPI cards + 4 charts (Recharts)
+
+### Local test
+
+```bash
+npm run dev
+node --env-file=.env.local scripts/test/verifyDashboard.mjs
+```
+
+Then visit: [http://localhost:3000/dashboard/analytics](http://localhost:3000/dashboard/analytics)
+
+### Features
+
+- **Responsive:** Grid layout adapts to mobile/tablet/desktop
+- **Interactive:** Dropdown to select 4/8/12/16 weeks of history
+- **Real-time:** Fetches fresh data on every page load (no stale cache)
+- **Charts:**
+  - Line charts for Remix and Credits (trend over time)
+  - Bar charts for Referral and Affiliate (weekly counts)
+
+### Files created
+
+- `src/app/api/analytics/dashboard/route.ts` - API endpoint
+- `src/hooks/useAnalyticsMetrics.ts` - Data fetching hook
+- `src/components/analytics/AnalyticsDashboard.tsx` - Chart components
+- `src/app/dashboard/analytics/page.tsx` - Dashboard page
+- `scripts/test/verifyDashboard.mjs` - Verification script
+- `scripts/migrations/create_analytics_dashboard_view.sql` - Optional SQL view
+
 ## Local QA
 - Use `npm run refresh:research` to simulate refreshes locally. The CLI prints per-project status (refreshed, simulated, failed), updates Supabase when a service role key is present, and exits with a non-zero code only if a refresh fails.
 - Run `npm run diagnose:system` to check whether diagnostics report the app as online, partially degraded, or offline before running automation.

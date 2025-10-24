@@ -1,0 +1,409 @@
+
+
+---
+
+````markdown
+# 📈 Phase 15.2 — Internal Analytics Dashboard (Admin)
+
+**Route:** `/dashboard/analytics`  
+**Stack:** Next.js 15, Tailwind, Recharts, Supabase (admin client), AgentStatus
+
+## What you get
+- API: `/api/analytics/dashboard` (returns timeseries + KPIs + recent AgentStatus logs)
+- Hook: `useAnalyticsMetrics.ts` (fetch + cache)
+- UI: `AnalyticsDashboard.tsx` (KPI cards + 4 charts)
+- Page: `/dashboard/analytics/page.tsx` (admin-only view wrapper)
+- Test: `scripts/test/verifyDashboard.mjs`
+- (Optional) SQL view for last-week snapshot
+
+---
+
+## 0) (Optional) SQL View — latest week snapshot
+**File:** `scripts/migrations/create_analytics_dashboard_view.sql`
+```sql
+-- Optional helper view with latest week snapshot per metric
+CREATE OR REPLACE VIEW public.analytics_latest_week AS
+WITH latest AS (
+  SELECT MAX(period_start) AS period_start FROM public.analytics_metrics
+)
+SELECT m.metric_type, m.period_start, m.period_end, m.value
+FROM public.analytics_metrics m
+JOIN latest l ON m.period_start = l.period_start;
+````
+
+---
+
+## 1) API — Dashboard data
+
+**File:** `src/app/api/analytics/dashboard/route.ts`
+
+```ts
+import { NextResponse } from "next/server";
+import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
+
+type MetricKey = "remix" | "referral" | "affiliate" | "credits";
+
+interface SeriesPoint {
+  date: string;   // ISO period_start
+  value: number;
+}
+interface DashboardData {
+  series: Record<MetricKey, SeriesPoint[]>;
+  totals: Record<MetricKey, number>;
+  recentLogs: Array<{
+    stage: string;
+    success: boolean;
+    last_run: string | null;
+    meta?: any;
+  }>;
+}
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const weeks = Math.min(Math.max(parseInt(url.searchParams.get("weeks") ?? "8", 10), 1), 26);
+
+  const sb = getSupabaseAdminClient();
+
+  try {
+    // 1) Pull last N weeks of analytics_metrics
+    const { data: rows, error } = await sb
+      .from("analytics_metrics")
+      .select("metric_type, period_start, value")
+      .order("period_start", { ascending: true });
+
+    if (error) throw error;
+
+    // keep only last N weeks per metric
+    const byMetric: Record<MetricKey, SeriesPoint[]> = {
+      remix: [], referral: [], affiliate: [], credits: []
+    };
+
+    const byTypeMap = new Map<MetricKey, { date: string, value: number }[]>();
+    for (const r of rows ?? []) {
+      const mt = r.metric_type as MetricKey;
+      if (!byTypeMap.has(mt)) byTypeMap.set(mt, []);
+      byTypeMap.get(mt)!.push({ date: r.period_start, value: r.value ?? 0 });
+    }
+    (["remix","referral","affiliate","credits"] as MetricKey[]).forEach((k) => {
+      const arr = (byTypeMap.get(k) ?? []).slice(-weeks);
+      byMetric[k] = arr;
+    });
+
+    // 2) Totals = latest available point per metric
+    const totals: Record<MetricKey, number> = {
+      remix: 0, referral: 0, affiliate: 0, credits: 0
+    };
+    (["remix","referral","affiliate","credits"] as MetricKey[]).forEach((k) => {
+      const arr = byMetric[k];
+      totals[k] = arr.length ? arr[arr.length - 1].value : 0;
+    });
+
+    // 3) Recent AgentStatus logs (last 10 viral-growth runs)
+    const { data: logs, error: logsErr } = await sb
+      .from("AgentStatus")
+      .select("stage, success, last_run, meta")
+      .eq("idea", "viral-growth")
+      .order("last_run", { ascending: false })
+      .limit(10);
+    if (logsErr) throw logsErr;
+
+    const payload: DashboardData = {
+      series: byMetric,
+      totals,
+      recentLogs: (logs ?? []).map((l: any) => ({
+        stage: l.stage,
+        success: l.success,
+        last_run: l.last_run ?? null,
+        meta: typeof l.meta === "string" ? safeParse(l.meta) : l.meta
+      }))
+    };
+
+    return NextResponse.json({ success: true, data: payload });
+  } catch (e: any) {
+    console.error("[analytics.dashboard] error:", e?.message ?? e);
+    return NextResponse.json(
+      { success: false, error: "DASHBOARD_FETCH_FAILED", message: String(e?.message ?? e) },
+      { status: 500 }
+    );
+  }
+}
+
+function safeParse(s: string | null) {
+  if (!s) return null;
+  try { return JSON.parse(s); } catch { return s; }
+}
+```
+
+---
+
+## 2) Hook — fetch dashboard data
+
+**File:** `src/hooks/useAnalyticsMetrics.ts`
+
+```ts
+"use client";
+
+import { useEffect, useState } from "react";
+
+type MetricKey = "remix" | "referral" | "affiliate" | "credits";
+interface SeriesPoint { date: string; value: number; }
+interface DashboardData {
+  series: Record<MetricKey, SeriesPoint[]>;
+  totals: Record<MetricKey, number>;
+  recentLogs: Array<{ stage: string; success: boolean; last_run: string | null; meta?: any }>;
+}
+
+export function useAnalyticsMetrics(weeks = 8) {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [isLoading, setLoading] = useState(true);
+  const [error, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setLoading(true);
+      setErr(null);
+      try {
+        const res = await fetch(`/api/analytics/dashboard?weeks=${weeks}`, { cache: "no-store" });
+        const json = await res.json();
+        if (!res.ok || !json?.success) throw new Error(json?.message ?? "Failed");
+        if (alive) setData(json.data);
+      } catch (e: any) {
+        if (alive) setErr(e?.message ?? String(e));
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [weeks]);
+
+  return { data, isLoading, error };
+}
+```
+
+---
+
+## 3) UI component — charts + KPIs
+
+**File:** `src/components/analytics/AnalyticsDashboard.tsx`
+
+```tsx
+"use client";
+
+import { Card, CardContent } from "@/components/ui/card";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar } from "recharts";
+import { motion } from "framer-motion";
+
+type MetricKey = "remix" | "referral" | "affiliate" | "credits";
+interface SeriesPoint { date: string; value: number; }
+interface Props {
+  series: Record<MetricKey, SeriesPoint[]>;
+  totals: Record<MetricKey, number>;
+  weeks: number;
+}
+
+export default function AnalyticsDashboard({ series, totals, weeks }: Props) {
+  const kpis: Array<{ key: MetricKey; label: string }> = [
+    { key: "remix", label: "Remixes (latest week)" },
+    { key: "referral", label: "Referrals (latest week)" },
+    { key: "affiliate", label: "Affiliate clicks (latest week)" },
+    { key: "credits", label: "Total credits distributed" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* KPIs */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {kpis.map(({ key, label }) => (
+          <motion.div key={key} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
+            <Card className="bg-[#111113] border-white/10">
+              <CardContent className="p-5">
+                <div className="text-xs uppercase tracking-wider text-zinc-400">{label}</div>
+                <div className="mt-2 text-3xl font-semibold text-zinc-50">{totals[key] ?? 0}</div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <MetricChart title="Remixes per week" data={series.remix} variant="line" />
+        <MetricChart title="Referral clicks per week" data={series.referral} variant="bar" />
+        <MetricChart title="Affiliate clicks per week" data={series.affiliate} variant="bar" />
+        <MetricChart title="Total credits (snapshot over time)" data={series.credits} variant="line" />
+      </div>
+
+      {/* Footnote */}
+      <p className="text-xs text-zinc-500">
+        Showing last {weeks} week(s). Credits line shows snapshots of total distributed credits; other charts show weekly counts.
+      </p>
+    </div>
+  );
+}
+
+function MetricChart({ title, data, variant }: { title: string; data: SeriesPoint[]; variant: "line" | "bar" }) {
+  // Format x-label as YYYY-MM-DD (period_start)
+  const formatted = (data ?? []).map(d => ({ ...d, x: d.date.slice(0, 10) }));
+  return (
+    <Card className="bg-[#111113] border-white/10">
+      <CardContent className="p-5">
+        <div className="mb-3 text-sm font-medium text-zinc-200">{title}</div>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            {variant === "line" ? (
+              <LineChart data={formatted}>
+                <XAxis dataKey="x" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Line type="monotone" dataKey="value" dot={false} />
+              </LineChart>
+            ) : (
+              <BarChart data={formatted}>
+                <XAxis dataKey="x" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="value" />
+              </BarChart>
+            )}
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+---
+
+## 4) Page — `/dashboard/analytics`
+
+**File:** `src/app/dashboard/analytics/page.tsx`
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import { useAnalyticsMetrics } from "@/hooks/useAnalyticsMetrics";
+import AnalyticsDashboard from "@/components/analytics/AnalyticsDashboard";
+
+export default function AnalyticsPage() {
+  const [weeks, setWeeks] = useState(8);
+  const { data, isLoading, error } = useAnalyticsMetrics(weeks);
+
+  return (
+    <div className="min-h-screen bg-[#060608] pb-12 pt-14 text-zinc-50">
+      <div className="mx-auto w-full max-w-7xl px-6 space-y-6">
+        <header className="flex items-center justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.35em] text-[#4f46e5]">Admin</p>
+            <h1 className="mt-2 text-2xl font-semibold">Analytics Dashboard</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-zinc-400">Weeks</label>
+            <select
+              className="rounded-md bg-[#111113] border border-white/10 px-2 py-1 text-sm"
+              value={weeks}
+              onChange={(e) => setWeeks(Number(e.target.value))}
+            >
+              {[4,8,12,16].map(w => <option key={w} value={w}>{w}</option>)}
+            </select>
+          </div>
+        </header>
+
+        {error && (
+          <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+            {error}
+          </div>
+        )}
+
+        {isLoading || !data ? (
+          <div className="text-sm text-zinc-400">Loading analytics…</div>
+        ) : (
+          <AnalyticsDashboard series={data.series} totals={data.totals} weeks={weeks} />
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## 5) Test — verify dashboard API
+
+**File:** `scripts/test/verifyDashboard.mjs`
+
+```js
+#!/usr/bin/env node
+import "dotenv/config";
+const API_BASE = process.env.API_BASE || "http://localhost:3000";
+
+async function main() {
+  console.log("🧪 GET /api/analytics/dashboard");
+  const res = await fetch(`${API_BASE}/api/analytics/dashboard?weeks=8`);
+  const json = await res.json();
+  console.log("Status:", res.status);
+  console.log("Body:", JSON.stringify(json, null, 2));
+  if (!res.ok || !json?.success) process.exit(1);
+  // quick shape check
+  const s = json.data?.series;
+  if (!s?.remix || !s?.referral || !s?.affiliate || !s?.credits) process.exit(2);
+  console.log("✅ Dashboard endpoint OK");
+}
+main().catch((e)=>{ console.error(e); process.exit(1); });
+```
+
+---
+
+## 6) README — Admin Analytics
+
+Append this after Phase 15.1 docs:
+
+```md
+## Internal Analytics Dashboard (Phase 15.2)
+Route: `/dashboard/analytics`
+
+**What it shows**
+- KPIs: latest week Remix / Referral / Affiliate totals + total Credits
+- Charts: weekly series for 4 metrics (last N weeks)
+- Recent 10 `AgentStatus` logs (via API)
+
+**How it works**
+- UI fetches `/api/analytics/dashboard?weeks=8`
+- Data comes from `analytics_metrics` (created in Phase 15.1) + `AgentStatus`
+
+**Local test**
+```
+
+npm run dev
+node --env-file=.env.local scripts/test/verifyDashboard.mjs
+
+```
+```
+
+---
+
+## 7) Quick run
+
+```bash
+# optional: create the helper view
+psql $DATABASE_URL -f scripts/migrations/create_analytics_dashboard_view.sql
+
+# dev server
+npm run dev
+
+# verify API
+node --env-file=.env.local scripts/test/verifyDashboard.mjs
+```
+
+## 8) Commit & tag
+
+```bash
+git add .
+git commit -m "Phase 15.2 Internal Analytics Dashboard implemented"
+git tag -a phase15-2-dashboard -m "Admin analytics dashboard ready"
+git push --follow-tags
+```
+
+`
