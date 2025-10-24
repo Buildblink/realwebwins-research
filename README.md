@@ -109,6 +109,141 @@ node --env-file=.env.local scripts/test/testWeeklySummary.mjs
 
 See [docs/phase15-verification-results.md](docs/phase15-verification-results.md) for detailed test results and troubleshooting steps.
 
+## Analytics & Weekly Aggregation
+
+**Status:** ✅ Production Ready (Phase 15.1)
+
+Phase 15.1 introduces automated weekly aggregation of viral growth metrics into the `analytics_metrics` table.
+
+### Metrics Tracked
+
+| Metric | Source | Aggregation | Description |
+|--------|--------|-------------|-------------|
+| **remix** | `workspace_remixes` | COUNT | Workspaces cloned this week |
+| **referral** | `referral_clicks` | COUNT | Referral link clicks this week |
+| **affiliate** | `affiliate_clicks` | COUNT | Affiliate tool clicks this week |
+| **credits** | `user_credits` | SUM | Total credits distributed (cumulative) |
+
+### API Endpoints
+
+#### Manual Aggregation
+```bash
+# Trigger manual aggregation (doesn't save to DB)
+POST /api/analytics/aggregate
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    { "metric_type": "remix", "value": 3, "period_start": "...", "period_end": "..." },
+    { "metric_type": "referral", "value": 5, "period_start": "...", "period_end": "..." }
+  ],
+  "period": { "start": "2025-10-20T00:00:00Z", "end": "2025-10-26T23:59:59Z" }
+}
+```
+
+#### Weekly Cron Aggregation
+```bash
+# Automated weekly aggregation (saves to analytics_metrics)
+POST /api/cron/analytics-weekly
+Authorization: Bearer ${WEEKLY_SUMMARY_SECRET}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Successfully aggregated 4 metrics",
+  "metrics": { "aggregated": 4, "failed": 0 },
+  "period": { "start": "...", "end": "..." }
+}
+```
+
+### Database Schema
+
+```sql
+analytics_metrics:
+  - id (uuid)
+  - metric_type (text): remix | referral | affiliate | credits
+  - period_start (timestamptz): Monday 00:00 UTC
+  - period_end (timestamptz): Sunday 23:59 UTC
+  - value (integer): Aggregated count or sum
+  - metadata (jsonb): Additional context
+  - created_at, updated_at (timestamptz)
+```
+
+### Verification
+
+```bash
+# Run analytics verification test
+node --env-file=.env.local scripts/test/verifyAnalytics.mjs
+```
+
+**Expected Output:**
+```
+✅ Manual aggregation succeeded
+   Metrics:
+      - remix: 3
+      - referral: 5
+      - affiliate: 2
+      - credits: 8
+
+✅ Cron aggregation succeeded
+✅ Found 4 metric records
+✅ AgentStatus logging functional
+```
+
+### Cron Setup
+
+**Production (Vercel):**
+The cron job runs automatically every Monday at 00:00 UTC via `vercel.json` configuration.
+
+**Local Testing:**
+```bash
+# Trigger cron manually
+curl -X POST \
+  -H "Authorization: Bearer ${WEEKLY_SUMMARY_SECRET}" \
+  http://localhost:3000/api/cron/analytics-weekly
+```
+
+### Environment Variables
+
+```bash
+WEEKLY_SUMMARY_SECRET=your-secret-key  # Required for cron auth
+```
+
+### Monitoring
+
+All aggregation runs are logged to `AgentStatus` with:
+- `idea: 'viral-growth'`
+- `stage: 'aggregate'` (manual) or `'cron'` (automated)
+- `success: true/false`
+- `meta:` JSON with period, metrics, and errors
+
+Query recent runs:
+```sql
+SELECT * FROM "AgentStatus"
+WHERE idea = 'viral-growth'
+ORDER BY created_at DESC
+LIMIT 10;
+```
+
+### Troubleshooting
+
+**Issue:** "No metrics returned"
+- **Solution:** Ensure Phase 15 tables have data (run Phase 15 verification tests)
+
+**Issue:** "Cron returns 401 Unauthorized"
+- **Solution:** Verify `WEEKLY_SUMMARY_SECRET` environment variable matches
+
+**Issue:** "Credits value is 0"
+- **Solution:** Users must have non-zero balance in `user_credits` table
+
+**Issue:** "UNIQUE constraint violation"
+- **Solution:** Cron tried to insert duplicate week - this is expected for retries
+
 ## Local QA
 - Use `npm run refresh:research` to simulate refreshes locally. The CLI prints per-project status (refreshed, simulated, failed), updates Supabase when a service role key is present, and exits with a non-zero code only if a refresh fails.
 - Run `npm run diagnose:system` to check whether diagnostics report the app as online, partially degraded, or offline before running automation.
