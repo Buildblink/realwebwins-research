@@ -1,14 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --muted: #f1f5f9;
-  --primary: #3b82f6;
-  --secondary: #8b5cf6;
+  --background: #060608;
+  --foreground: #e5e7eb;
+  --muted: #111113;
+  --primary: #4f46e5;
+  --secondary: #111113;
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
+  --border: rgba(255, 255, 255, 0.1);
 }
 
 @theme inline {
@@ -20,22 +21,31 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-border: var(--border);
   --font-sans: var(--font-inter);
   --font-heading: var(--font-space);
 }
 
+/* Phase 15.3 Dark Theme Base */
+html,
 body {
-  background: radial-gradient(circle at top, rgba(59, 130, 246, 0.08), transparent 55%),
-    radial-gradient(circle at bottom, rgba(139, 92, 246, 0.08), transparent 45%),
-    var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: #060608;
+  color: #e5e7eb;
   min-height: 100vh;
 }
 
+body {
+  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
 a {
-  color: inherit;
+  color: #4f46e5;
   text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: #818cf8;
 }
 
 .font-heading {
@@ -44,4 +54,8 @@ a {
 
 .prose {
   max-width: 65ch;
+}
+
+.border-default {
+  border-color: rgba(255, 255, 255, 0.1);
 }

@@ -61,19 +61,19 @@ export function IdeaResearchForm() {
   return (
     <div className="space-y-8">
       <motion.div
-        className="rounded-2xl border border-foreground/10 bg-white/90 p-8 shadow-lg"
+        className="rounded-2xl border border-white/10 bg-[#111113] p-8 shadow-sm"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="flex items-center gap-3">
-          <div className="rounded-full bg-primary/10 p-3 text-primary">
+          <div className="rounded-full bg-[#4f46e5]/20 p-3 text-[#4f46e5]">
             <Sparkles className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="font-heading text-2xl text-slate-900">
+            <h2 className="font-heading text-2xl text-zinc-50">
               Validate an idea in under three minutes
             </h2>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-zinc-400">
               Claude runs the RealWebWins seven-step validation playbook and
               saves the results to your vault.
             </p>
@@ -84,7 +84,7 @@ export function IdeaResearchForm() {
           <div>
             <label
               htmlFor="idea"
-              className="text-xs font-semibold uppercase tracking-wide text-slate-500"
+              className="text-xs font-semibold uppercase tracking-wide text-zinc-400"
             >
               Business idea
             </label>
@@ -100,7 +100,7 @@ export function IdeaResearchForm() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-zinc-400">
               Claude analyzes market size, competition, monetization, and gives
               you a go or no-go verdict with a confidence score.
             </p>
@@ -131,14 +131,14 @@ export function IdeaResearchForm() {
 
       {report && (
         <section className="space-y-4">
-          <div className="flex flex-col gap-3 rounded-xl border border-foreground/10 bg-foreground/5 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-[#111113] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-wide text-foreground/60">
+              <p className="text-xs uppercase tracking-wide text-zinc-400">
                 Verdict
               </p>
-              <p className="font-heading text-2xl font-semibold text-foreground">
+              <p className="font-heading text-2xl font-semibold text-zinc-50">
                 {(report.verdict ?? "pending").replace("_", " ").toUpperCase()} -{" "}
-                <span className="text-primary">
+                <span className="text-[#4f46e5]">
                   {Number.isFinite(report.score)
                     ? `${report.score.toFixed(1)}/10`
                     : "--/10"}

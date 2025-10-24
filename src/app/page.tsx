@@ -26,31 +26,31 @@ export default function HomePage() {
   return (
     <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
       <IdeaResearchForm />
-      <aside className="space-y-6 rounded-2xl border border-foreground/10 bg-white/60 p-8 shadow-inner backdrop-blur">
-        <h2 className="font-heading text-xl font-semibold text-slate-900">
+      <aside className="space-y-6 rounded-2xl border border-white/10 bg-[#111113] p-8 shadow-sm">
+        <h2 className="font-heading text-xl font-semibold text-zinc-50">
           Why RealWebWins?
         </h2>
-        <p className="text-sm leading-relaxed text-slate-600">
+        <p className="text-sm leading-relaxed text-zinc-400">
           Turn vague ideas into confident action plans. Research runs are scoped
           to solopreneur needs and optimized for speed, clarity, and retention.
         </p>
         <div className="space-y-5">
           {highlights.map((feature) => (
             <div key={feature.title} className="flex gap-3">
-              <div className="mt-1 rounded-lg bg-primary/10 p-2 text-primary">
+              <div className="mt-1 rounded-lg bg-[#4f46e5]/20 p-2 text-[#4f46e5]">
                 <feature.icon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-800">
+                <p className="text-sm font-semibold text-zinc-200">
                   {feature.title}
                 </p>
-                <p className="text-xs text-slate-500">{feature.description}</p>
+                <p className="text-xs text-zinc-400">{feature.description}</p>
               </div>
             </div>
           ))}
         </div>
-        <div className="rounded-xl bg-gradient-to-br from-primary/10 via-secondary/10 to-secondary/5 p-5 text-xs text-slate-600">
-          <p className="font-semibold text-slate-800">Build Roadmap</p>
+        <div className="rounded-xl bg-[#4f46e5]/10 p-5 text-xs text-zinc-400">
+          <p className="font-semibold text-zinc-200">Build Roadmap</p>
           <ul className="mt-3 space-y-2">
             <li>- Phase 1: Research engine and vault (this build)</li>
             <li>- Phase 2: Marketing Playbook and Action Plan generators</li>

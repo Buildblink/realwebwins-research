@@ -110,8 +110,8 @@ export default function ShowcasePage() {
     <div className="mx-auto w-full max-w-7xl space-y-8 px-6 py-12">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-slate-900">Workspace Showcase</h1>
-        <p className="mt-2 text-slate-600">
+        <h1 className="text-4xl font-bold text-zinc-50">Workspace Showcase</h1>
+        <p className="mt-2 text-zinc-400">
           Explore published workspaces from the community
         </p>
       </div>
@@ -120,7 +120,7 @@ export default function ShowcasePage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         {/* Category Filter */}
         <div className="flex flex-wrap gap-2">
-          <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
+          <span className="flex items-center gap-2 text-sm font-medium text-zinc-300">
             <Filter className="h-4 w-4" />
             Category:
           </span>
@@ -166,19 +166,19 @@ export default function ShowcasePage() {
         <div className="flex min-h-[40vh] items-center justify-center">
           <div className="text-center">
             <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-            <p className="mt-4 text-sm text-slate-600">Loading showcase...</p>
+            <p className="mt-4 text-sm text-zinc-400">Loading showcase...</p>
           </div>
         </div>
       )}
 
       {/* Error State */}
       {error && !isLoading && (
-        <Card className="border-rose-200 bg-rose-50">
+        <Card className="border-danger/40 bg-danger/10">
           <CardContent className="flex items-center gap-3 py-8">
-            <AlertCircle className="h-6 w-6 text-rose-600" />
+            <AlertCircle className="h-6 w-6 text-danger" />
             <div>
-              <h3 className="font-semibold text-rose-900">Failed to load showcase</h3>
-              <p className="text-sm text-rose-700">{error}</p>
+              <h3 className="font-semibold text-danger">Failed to load showcase</h3>
+              <p className="text-sm text-danger/80">{error}</p>
             </div>
           </CardContent>
         </Card>
@@ -188,7 +188,7 @@ export default function ShowcasePage() {
       {!isLoading && !error && workspaces.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-slate-600">No published workspaces found.</p>
+            <p className="text-zinc-400">No published workspaces found.</p>
           </CardContent>
         </Card>
       )}
@@ -206,14 +206,14 @@ export default function ShowcasePage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {workspace.description && (
-                      <p className="text-sm text-slate-600 line-clamp-3">
+                      <p className="text-sm text-zinc-400 line-clamp-3">
                         {workspace.description}
                       </p>
                     )}
 
                     {/* Pain Point Info */}
                     <div className="space-y-2">
-                      <p className="text-xs text-slate-500 line-clamp-2">
+                      <p className="text-xs text-zinc-400 line-clamp-2">
                         {workspace.workspaces.pain_points.text}
                       </p>
                       <div className="flex flex-wrap gap-2">
@@ -231,7 +231,7 @@ export default function ShowcasePage() {
                     </div>
 
                     {/* Stats */}
-                    <div className="flex items-center gap-4 text-xs text-slate-500">
+                    <div className="flex items-center gap-4 text-xs text-zinc-400">
                       <span className="flex items-center gap-1">
                         <Eye className="h-3 w-3" />
                         {workspace.views} views
@@ -266,7 +266,7 @@ export default function ShowcasePage() {
               >
                 Previous
               </Button>
-              <span className="flex items-center px-4 text-sm text-slate-600">
+              <span className="flex items-center px-4 text-sm text-zinc-400">
                 Page {page} of {totalPages}
               </span>
               <Button

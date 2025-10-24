@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${spaceGrotesk.variable} bg-background text-foreground antialiased`}
+        className={`${inter.variable} ${spaceGrotesk.variable} min-h-screen bg-[#060608] text-zinc-200 antialiased`}
       >
         {plausibleDomain ? (
           <Script
@@ -43,16 +43,17 @@ export default function RootLayout({
             strategy="lazyOnload"
           />
         ) : null}
-        <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10">
-          <header className="mb-12 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-primary/70">
-                RealWebWins
-              </p>
-              <h1 className="font-heading text-3xl font-semibold text-slate-900 sm:text-4xl">
-                Research System
-              </h1>
-            </div>
+        <main className="bg-[#060608] min-h-screen">
+          <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10">
+            <header className="mb-12 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-[#4f46e5]/70">
+                  RealWebWins
+                </p>
+                <h1 className="font-heading text-3xl font-semibold text-zinc-50 sm:text-4xl">
+                  Research System
+                </h1>
+              </div>
             <nav className="flex gap-3 text-sm text-foreground/70">
               <Link className="rounded-lg px-3 py-2 hover:bg-foreground/5" href="/">
                 Home
@@ -83,11 +84,12 @@ export default function RootLayout({
               </Link>
             </nav>
           </header>
-          <main className="flex-1 pb-12">{children}</main>
-          <footer className="border-t border-foreground/10 pt-6 text-xs text-foreground/60">
-            Built with Next.js, Supabase, and Claude (mocked) - (c) {currentYear} RealWebWins
-          </footer>
-        </div>
+            <div className="flex-1 pb-12">{children}</div>
+            <footer className="border-t border-white/10 pt-6 text-xs text-zinc-500">
+              Built with Next.js, Supabase, and Claude (mocked) - (c) {currentYear} RealWebWins
+            </footer>
+          </div>
+        </main>
         <FeedbackWidget />
       </body>
     </html>
