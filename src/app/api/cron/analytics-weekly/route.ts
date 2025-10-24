@@ -99,7 +99,14 @@ export async function POST(request: Request) {
             continue;
           }
 
-          value = data?.reduce((sum, row) => sum + (row[metric.field!] || 0), 0) ?? 0;
+          const rows = Array.isArray(data)
+  ? (data as unknown as Record<string, unknown>[])
+  : [];
+
+value = rows.reduce((sum, row) => {
+  const raw = row[metric.field!] as number | null | undefined;
+  return sum + (typeof raw === "number" ? raw : 0);
+}, 0);
         }
 
         // Upsert to analytics_metrics
