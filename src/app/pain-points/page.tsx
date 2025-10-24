@@ -23,10 +23,10 @@ export default async function PainPointsPage() {
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-12">
       {/* Header */}
       <section className="space-y-3">
-        <h1 className="font-heading text-4xl font-bold tracking-tight text-slate-900">
+        <h1 className="font-heading text-4xl font-bold tracking-tight text-zinc-50">
           Pain Point Explorer
         </h1>
-        <p className="text-lg text-slate-600">
+        <p className="text-lg text-zinc-400">
           Browse struggles creators face and problems consumers want solved — linked to
           actionable playbooks and proven solutions.
         </p>

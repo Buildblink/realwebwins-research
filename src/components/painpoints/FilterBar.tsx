@@ -36,14 +36,14 @@ export function FilterBar({
   return (
     <div className="flex flex-wrap gap-3">
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="audience-filter" className="text-xs font-medium text-slate-600">
+        <label htmlFor="audience-filter" className="text-xs font-medium text-zinc-400">
           Audience
         </label>
         <select
           id="audience-filter"
           value={selectedAudience}
           onChange={(e) => onAudienceChange(e.target.value)}
-          className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition hover:border-slate-300 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="rounded-md border border-white/10 bg-[#111113] px-3 py-2 text-sm text-zinc-200 transition hover:border-white/20 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         >
           <option value="">All Audiences</option>
           {audiences.map((audience) => (
@@ -55,14 +55,14 @@ export function FilterBar({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="category-filter" className="text-xs font-medium text-slate-600">
+        <label htmlFor="category-filter" className="text-xs font-medium text-zinc-400">
           Category
         </label>
         <select
           id="category-filter"
           value={selectedCategory}
           onChange={(e) => onCategoryChange(e.target.value)}
-          className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition hover:border-slate-300 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="rounded-md border border-white/10 bg-[#111113] px-3 py-2 text-sm text-zinc-200 transition hover:border-white/20 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         >
           <option value="">All Categories</option>
           {categories.map((cat) => (
@@ -74,14 +74,14 @@ export function FilterBar({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="niche-filter" className="text-xs font-medium text-slate-600">
+        <label htmlFor="niche-filter" className="text-xs font-medium text-zinc-400">
           Niche
         </label>
         <select
           id="niche-filter"
           value={selectedNiche}
           onChange={(e) => onNicheChange(e.target.value)}
-          className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition hover:border-slate-300 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="rounded-md border border-white/10 bg-[#111113] px-3 py-2 text-sm text-zinc-200 transition hover:border-white/20 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         >
           <option value="">All Niches</option>
           {niches.map((niche) => (
@@ -93,14 +93,14 @@ export function FilterBar({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="source-filter" className="text-xs font-medium text-slate-600">
+        <label htmlFor="source-filter" className="text-xs font-medium text-zinc-400">
           Source
         </label>
         <select
           id="source-filter"
           value={selectedSource}
           onChange={(e) => onSourceChange(e.target.value)}
-          className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition hover:border-slate-300 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="rounded-md border border-white/10 bg-[#111113] px-3 py-2 text-sm text-zinc-200 transition hover:border-white/20 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         >
           <option value="">All Sources</option>
           {sources.map((source) => (
@@ -117,9 +117,9 @@ export function FilterBar({
             type="checkbox"
             checked={hasPlaybook}
             onChange={(e) => onHasPlaybookChange(e.target.checked)}
-            className="h-4 w-4 rounded border-slate-300 text-secondary focus:ring-2 focus:ring-secondary/20 cursor-pointer"
+            className="h-4 w-4 rounded border-white/20 text-secondary focus:ring-2 focus:ring-secondary/20 cursor-pointer"
           />
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-zinc-300">
             Has Playbook
           </span>
         </label>

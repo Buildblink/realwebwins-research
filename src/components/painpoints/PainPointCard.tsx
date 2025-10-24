@@ -11,18 +11,18 @@ interface PainPointCardProps {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Marketing: "bg-blue-100 text-blue-700 border-blue-200",
-  Monetization: "bg-green-100 text-green-700 border-green-200",
-  Motivation: "bg-purple-100 text-purple-700 border-purple-200",
-  Product: "bg-orange-100 text-orange-700 border-orange-200",
-  Growth: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  Pricing: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  Technical: "bg-gray-100 text-gray-700 border-gray-200",
+  Marketing: "bg-blue-500/20 text-blue-400 border-blue-500/40",
+  Monetization: "bg-green-500/20 text-green-400 border-green-500/40",
+  Motivation: "bg-purple-500/20 text-purple-400 border-purple-500/40",
+  Product: "bg-orange-500/20 text-orange-400 border-orange-500/40",
+  Growth: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+  Pricing: "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
+  Technical: "bg-gray-500/20 text-gray-400 border-gray-500/40",
 };
 
 function getCategoryColor(category: string | null): string {
-  if (!category) return "bg-gray-100 text-gray-700 border-gray-200";
-  return CATEGORY_COLORS[category] || "bg-gray-100 text-gray-700 border-gray-200";
+  if (!category) return "bg-gray-500/20 text-gray-400 border-gray-500/40";
+  return CATEGORY_COLORS[category] || "bg-gray-500/20 text-gray-400 border-gray-500/40";
 }
 
 export function PainPointCard({ painPoint }: PainPointCardProps) {
@@ -38,7 +38,7 @@ export function PainPointCard({ painPoint }: PainPointCardProps) {
               {painPoint.related_playbook && (
                 <Badge
                   variant="neutral"
-                  className="bg-green-100 text-green-800 border-green-300 border flex items-center gap-1"
+                  className="bg-green-500/20 text-green-400 border-green-500/40 border flex items-center gap-1"
                 >
                   <BookOpen className="h-3 w-3" />
                   Playbook Available
@@ -47,7 +47,7 @@ export function PainPointCard({ painPoint }: PainPointCardProps) {
               {painPoint.audience === "consumer" && (
                 <Badge
                   variant="neutral"
-                  className="bg-emerald-100 text-emerald-800 border-emerald-200 border"
+                  className="bg-emerald-500/20 text-emerald-400 border-emerald-500/40 border"
                 >
                   Consumer Problem
                 </Badge>
@@ -61,26 +61,26 @@ export function PainPointCard({ painPoint }: PainPointCardProps) {
                 </Badge>
               )}
               {painPoint.niche && (
-                <Badge variant="neutral" className="border-slate-200">
+                <Badge variant="neutral" className="border-zinc-500/40 bg-zinc-500/20 text-zinc-400">
                   {painPoint.niche}
                 </Badge>
               )}
             </div>
             {painPoint.frequency && painPoint.frequency > 1 && (
-              <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
+              <span className="text-xs font-medium text-zinc-400 whitespace-nowrap">
                 {painPoint.frequency}x reported
               </span>
             )}
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-base font-medium text-slate-900 leading-relaxed group-hover:text-primary transition-colors">
+          <p className="text-base font-medium text-zinc-200 leading-relaxed group-hover:text-primary transition-colors">
             {painPoint.text}
           </p>
-          <div className="flex items-center justify-between text-xs text-slate-500">
+          <div className="flex items-center justify-between text-xs text-zinc-400">
             <div className="flex items-center gap-2">
               {painPoint.source && (
-                <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium">
+                <span className="rounded-full bg-[#111113] px-2 py-1 text-xs font-medium">
                   {painPoint.source}
                 </span>
               )}

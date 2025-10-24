@@ -17,18 +17,18 @@ interface PageProps {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Marketing: "bg-blue-100 text-blue-700 border-blue-200",
-  Monetization: "bg-green-100 text-green-700 border-green-200",
-  Motivation: "bg-purple-100 text-purple-700 border-purple-200",
-  Product: "bg-orange-100 text-orange-700 border-orange-200",
-  Growth: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  Pricing: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  Technical: "bg-gray-100 text-gray-700 border-gray-200",
+  Marketing: "bg-blue-500/20 text-blue-400 border-blue-500/40",
+  Monetization: "bg-green-500/20 text-green-400 border-green-500/40",
+  Motivation: "bg-purple-500/20 text-purple-400 border-purple-500/40",
+  Product: "bg-orange-500/20 text-orange-400 border-orange-500/40",
+  Growth: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+  Pricing: "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
+  Technical: "bg-gray-500/20 text-gray-400 border-gray-500/40",
 };
 
 function getCategoryColor(category: string | null): string {
-  if (!category) return "bg-gray-100 text-gray-700 border-gray-200";
-  return CATEGORY_COLORS[category] || "bg-gray-100 text-gray-700 border-gray-200";
+  if (!category) return "bg-gray-500/20 text-gray-400 border-gray-500/40";
+  return CATEGORY_COLORS[category] || "bg-gray-500/20 text-gray-400 border-gray-500/40";
 }
 
 export default async function PainPointDetailPage(props: PageProps) {
@@ -65,7 +65,7 @@ export default async function PainPointDetailPage(props: PageProps) {
       {/* Back Navigation */}
       <Link
         href="/pain-points"
-        className="flex items-center gap-2 text-sm text-slate-600 hover:text-primary transition"
+        className="flex items-center gap-2 text-sm text-zinc-400 hover:text-primary transition"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Pain Point Explorer
@@ -82,23 +82,23 @@ export default async function PainPointDetailPage(props: PageProps) {
                 </Badge>
               )}
               {painPoint.niche && (
-                <Badge variant="neutral" className="border-slate-200">
+                <Badge variant="neutral" className="border-zinc-500/40 bg-zinc-500/20 text-zinc-400">
                   {painPoint.niche}
                 </Badge>
               )}
               {painPoint.source && (
-                <Badge variant="neutral" className="border-slate-300">
+                <Badge variant="neutral" className="border-zinc-500/40 bg-zinc-500/20 text-zinc-400">
                   Source: {painPoint.source}
                 </Badge>
               )}
             </div>
             {painPoint.frequency && painPoint.frequency > 1 && (
-              <div className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+              <div className="rounded-full bg-[#111113] px-3 py-1 text-sm font-medium text-zinc-300">
                 Reported {painPoint.frequency}x
               </div>
             )}
           </div>
-          <CardTitle className="mt-4 text-2xl font-bold leading-relaxed text-slate-900">
+          <CardTitle className="mt-4 text-2xl font-bold leading-relaxed text-zinc-50">
             {painPoint.text}
           </CardTitle>
         </CardHeader>
@@ -106,8 +106,8 @@ export default async function PainPointDetailPage(props: PageProps) {
         <CardContent className="space-y-6">
           {/* Proof Link */}
           {painPoint.proof_link && (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+            <div className="rounded-lg border border-white/10 bg-[#111113]/50 p-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-zinc-300">
                 <ExternalLink className="h-4 w-4" />
                 Original Discussion
               </div>
@@ -124,14 +124,14 @@ export default async function PainPointDetailPage(props: PageProps) {
 
           {/* Related Playbook */}
           {painPoint.related_playbook && (
-            <div className="rounded-lg border border-secondary/30 bg-secondary/5 p-6">
+            <div className="rounded-lg border border-secondary/30 bg-secondary/10 p-6">
               <div className="flex items-start gap-3">
                 <BookOpen className="h-5 w-5 text-secondary mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-slate-900">
+                  <h3 className="font-semibold text-zinc-50">
                     Recommended Playbook
                   </h3>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <p className="mt-1 text-sm text-zinc-400">
                     Learn how to solve this problem with proven strategies
                   </p>
                   <Link href={`/playbook/${painPoint.related_playbook}`}>
@@ -146,17 +146,17 @@ export default async function PainPointDetailPage(props: PageProps) {
 
           {/* Related Case Study */}
           {relatedCase && (
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-6">
+            <div className="rounded-lg border border-primary/30 bg-primary/10 p-6">
               <div className="flex items-start gap-3">
                 <Lightbulb className="h-5 w-5 text-primary mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-slate-900">
+                  <h3 className="font-semibold text-zinc-50">
                     Related Case Study
                   </h3>
-                  <p className="mt-2 font-medium text-slate-800">
+                  <p className="mt-2 font-medium text-zinc-200">
                     {relatedCase.title}
                   </p>
-                  <p className="mt-1 text-sm text-slate-600 line-clamp-2">
+                  <p className="mt-1 text-sm text-zinc-400 line-clamp-2">
                     {relatedCase.idea_description}
                   </p>
                   <Link href={`/project/${relatedCase.id}`}>
@@ -170,19 +170,19 @@ export default async function PainPointDetailPage(props: PageProps) {
           )}
 
           {/* Metadata */}
-          <div className="border-t border-slate-200 pt-4">
+          <div className="border-t border-white/10 pt-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-slate-500">Last Seen:</span>
-                <span className="ml-2 text-slate-900">
+                <span className="text-zinc-400">Last Seen:</span>
+                <span className="ml-2 text-zinc-200">
                   {painPoint.last_seen
                     ? new Date(painPoint.last_seen).toLocaleDateString()
                     : "Unknown"}
                 </span>
               </div>
               <div>
-                <span className="text-slate-500">Added:</span>
-                <span className="ml-2 text-slate-900">
+                <span className="text-zinc-400">Added:</span>
+                <span className="ml-2 text-zinc-200">
                   {new Date(painPoint.created_at).toLocaleDateString()}
                 </span>
               </div>
@@ -192,12 +192,12 @@ export default async function PainPointDetailPage(props: PageProps) {
       </Card>
 
       {/* CTA */}
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5">
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/10 to-secondary/10">
         <CardContent className="py-8 text-center">
-          <h2 className="text-xl font-semibold text-slate-900">
+          <h2 className="text-xl font-semibold text-zinc-50">
             Struggling with this too?
           </h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-zinc-400">
             Validate your solution idea with Realwebwins research agent
           </p>
           <Link href="/">

@@ -35,7 +35,7 @@ export function SearchBar({
 
   return (
     <div className="relative w-full">
-      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
       <Input
         type="text"
         value={localValue}

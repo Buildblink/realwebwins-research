@@ -149,7 +149,7 @@ export function PainPointList({
 
       {/* Results Count */}
       {data && (
-        <div className="text-sm text-slate-600">
+        <div className="text-sm text-zinc-400">
           Showing {data.data.length} of {data.total} pain points
           {(search || category || niche || source || audience || hasPlaybook) && " (filtered)"}
         </div>
@@ -164,7 +164,7 @@ export function PainPointList({
 
       {/* Error State */}
       {error && !isLoading && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-red-700">
+        <div className="rounded-lg border border-danger/40 bg-danger/10 p-6 text-center text-danger">
           <p className="font-semibold">Error loading pain points</p>
           <p className="text-sm">{error}</p>
         </div>
@@ -194,9 +194,9 @@ export function PainPointList({
 
       {/* Empty State */}
       {!isLoading && !error && data && data.data.length === 0 && (
-        <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-12 text-center">
-          <p className="text-lg font-semibold text-slate-700">No pain points found</p>
-          <p className="mt-2 text-sm text-slate-500">
+        <div className="rounded-lg border border-dashed border-white/20 bg-[#111113]/50 p-12 text-center">
+          <p className="text-lg font-semibold text-zinc-300">No pain points found</p>
+          <p className="mt-2 text-sm text-zinc-400">
             Try adjusting your search or filters
           </p>
         </div>

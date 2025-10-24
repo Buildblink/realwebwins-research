@@ -61,7 +61,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
         {pages.map((page, idx) => {
           if (page === "...") {
             return (
-              <span key={`ellipsis-${idx}`} className="px-2 text-slate-400">
+              <span key={`ellipsis-${idx}`} className="px-2 text-zinc-400">
                 ...
               </span>
             );
