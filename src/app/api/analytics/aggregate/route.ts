@@ -70,18 +70,23 @@ export async function POST() {
 
           value = count ?? 0;
         } else if (metric.aggregation === 'sum' && metric.field) {
-          // Sum a specific field (e.g., total credits)
-          const { data, error } = await supabase
-            .from(metric.table)
-            .select(metric.field);
+  // Sum a specific field (e.g., total credits)
+  const { data, error } = await supabase
+    .from(metric.table)
+    .select(metric.field);
 
-          if (error) {
-            console.error(`[analytics.aggregate] Failed to sum ${metric.type}:`, error);
-            continue;
-          }
+  if (error) {
+    console.error(`[analytics.aggregate] Failed to sum ${metric.type}:`, error);
+    continue;
+  }
 
-          value = data?.reduce((sum, row) => sum + (row[metric.field!] || 0), 0) ?? 0;
-        }
+  // Ensure data is typed as an array of objects
+  const rows = (data ?? []) as Record<string, unknown>[];
+  value = rows.reduce((sum, row) => {
+    const raw = row[metric.field!] as number | null | undefined;
+    return sum + (typeof raw === "number" ? raw : 0);
+  }, 0);
+}
 
         results.push({
           metric_type: metric.type,
