@@ -81,7 +81,9 @@ export async function POST() {
   }
 
   // Ensure data is typed as an array of objects
-  const rows = (data ?? []) as Record<string, unknown>[];
+  const rows = Array.isArray(data)
+  ? (data as unknown as Record<string, unknown>[])
+  : [];
   value = rows.reduce((sum, row) => {
     const raw = row[metric.field!] as number | null | undefined;
     return sum + (typeof raw === "number" ? raw : 0);
