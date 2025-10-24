@@ -192,6 +192,11 @@ async function main() {
   }
 
   // Supabase connectivity check
+if (process.env.VERCEL === "1") {
+  console.log(
+    chalk.cyan("🧩 Skipping Supabase REST check — running inside Vercel build environment.")
+  );
+} else {
   const supabaseStatus = await checkSupabaseRest(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -201,6 +206,7 @@ async function main() {
   } else if (supabaseStatus.warning) {
     hasWarnings = true;
   }
+}
 
   // Environment mode
   const runningInVercel = process.env.VERCEL === "1";
