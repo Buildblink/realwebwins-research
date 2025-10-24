@@ -12,6 +12,12 @@
 - Run `npm run dev` and open `http://localhost:3000`.
 - When Supabase credentials are missing, a local JSON-backed stub is used so you can prototype without network access.
 
+## Windows Compatibility Note
+- Uses `moduleResolution: "node"` (instead of "bundler") for Windows path compatibility
+- `forceConsistentCasingInFileNames: false` allows case-insensitive file matching
+- Fixes "Debug Failure. Expected C:/Projects/... === C:\Projects/..." error on Next.js 15 + TypeScript on Windows
+- Verified clean builds on both Windows local and Vercel deployments
+
 ## Supabase Policies & Keys
 
 - The refresh CLI now uses the anon key for read-only queries and the service-role key exclusively for `UPDATE`/`INSERT` operations. Ensure `SUPABASE_SERVICE_ROLE_KEY` remains present in `.env.local` so write paths can bypass RLS.
