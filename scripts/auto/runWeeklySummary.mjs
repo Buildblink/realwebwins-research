@@ -66,7 +66,7 @@ async function run() {
         views,
         remix_count,
         created_at,
-        workspaces!inner (
+        workspaces!public_workspaces_workspace_id_fkey!inner (
           id,
           pain_point_id,
           pain_points (

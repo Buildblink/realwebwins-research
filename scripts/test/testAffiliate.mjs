@@ -26,7 +26,7 @@ async function testAffiliateAPI() {
 
   const testToolName = 'TestTool-' + Date.now();
   const testUrl = 'https://example.com/test-tool';
-  const testWorkspaceId = 'test-workspace-' + Date.now();
+  const testWorkspaceId = null; // Can be null or a valid UUID
   const testPlaybookSlug = 'test-playbook';
 
   try {
@@ -38,9 +38,9 @@ async function testAffiliateAPI() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        tool: testToolName,
+        toolName: testToolName,
         url: testUrl,
-        workspaceId: testWorkspaceId,
+        // workspaceId is optional (null is OK)
         playbookSlug: testPlaybookSlug,
         ref: 'test-ref-source',
       }),

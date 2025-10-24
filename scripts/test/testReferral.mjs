@@ -49,7 +49,7 @@ async function testReferralAPI() {
       },
       body: JSON.stringify({
         ref: testUserId,
-        targetPath: testPath,
+        target: testPath,
       }),
     });
 

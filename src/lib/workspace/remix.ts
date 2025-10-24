@@ -59,46 +59,66 @@ export async function cloneWorkspace(
     }
 
     // 3. Create a new pain point (clone)
+    const painPointPayload = {
+      text: sourcePainPoint.text,
+      category: sourcePainPoint.category,
+      niche: sourcePainPoint.niche,
+      source: "remix",
+      audience: sourcePainPoint.audience,
+      frequency: 1,
+      proof_link: sourcePainPoint.proof_link,
+      related_playbook: sourcePainPoint.related_playbook,
+    };
+
+    console.log("[remix] Creating pain point clone:", painPointPayload);
+
     const { data: newPainPoint, error: newPainPointError } = await supabase
       .from("pain_points")
-      .insert([{
-        text: sourcePainPoint.text,
-        category: sourcePainPoint.category,
-        niche: sourcePainPoint.niche,
-        source: "remix",
-        audience: sourcePainPoint.audience,
-        frequency: 1,
-        proof_link: sourcePainPoint.proof_link,
-        related_playbook: sourcePainPoint.related_playbook,
-      }])
+      .insert([painPointPayload])
       .select()
       .single();
 
     if (newPainPointError || !newPainPoint) {
+      console.error("[remix] Pain point creation failed:", newPainPointError);
       return {
         success: false,
         error: "Failed to create pain point clone",
       };
     }
 
+    console.log("[remix] Pain point created:", newPainPoint.id);
+
     // 4. Create new workspace (linked to user)
+    const workspacePayload = {
+      pain_point_id: newPainPoint.id,
+      title: sourceWorkspace.title + " (Remixed)",
+      status: "active",
+      user_id: userId,
+    };
+
+    console.log("[remix] Creating workspace with payload:", workspacePayload);
+
     const { data: newWorkspace, error: newWorkspaceError } = await supabase
       .from("workspaces")
-      .insert([{
-        pain_point_id: newPainPoint.id,
-        title: sourceWorkspace.title + " (Remixed)",
-        status: "active",
-        user_id: userId,
-      }])
+      .insert([workspacePayload])
       .select()
       .single();
 
     if (newWorkspaceError || !newWorkspace) {
+      console.error("[remix] Workspace creation failed:", {
+        error: newWorkspaceError,
+        payload: workspacePayload,
+        errorMessage: newWorkspaceError?.message,
+        errorCode: newWorkspaceError?.code,
+        errorDetails: newWorkspaceError?.details,
+      });
       return {
         success: false,
         error: "Failed to create new workspace",
       };
     }
+
+    console.log("[remix] Workspace created:", newWorkspace.id);
 
     // 5. Get all outputs from source workspace
     const { data: sourceOutputs, error: outputsError } = await supabase

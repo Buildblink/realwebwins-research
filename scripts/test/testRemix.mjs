@@ -60,7 +60,7 @@ async function testRemixAPI() {
       },
       body: JSON.stringify({
         userId: 'test-user-remix-123',
-        referrerId: 'test-referrer-456',
+        ref: 'test-referrer-456',
       }),
     });
 
@@ -73,12 +73,12 @@ async function testRemixAPI() {
 
     console.log('   ✅ API Success:', result);
 
-    if (!result.success || !result.newWorkspaceId) {
+    if (!result.success || !result.data?.newWorkspaceId) {
       console.error('   ❌ Invalid response structure');
       return { success: false, reason: 'invalid_response', details: result };
     }
 
-    const newWorkspaceId = result.newWorkspaceId;
+    const newWorkspaceId = result.data.newWorkspaceId;
 
     // Step 4: Verify new workspace exists
     console.log('\n3️⃣  Verifying new workspace created...');

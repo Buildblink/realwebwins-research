@@ -73,6 +73,42 @@
   ```
 - Optional automation: add a `vercel.json` with `{"crons":[{"path":"/api/cron/verify","schedule":"0 4 * * *"}]}` to run verification daily in production.
 
+## Phase 15 Viral Growth Verification
+
+**Status:** ✅ PASSED (October 23, 2025)
+
+Phase 15 introduces viral growth features: Remix, Referrals, Affiliate tracking, and Weekly Automation.
+
+### Quick Verification
+```bash
+# Run all Phase 15 tests
+node --env-file=.env.local scripts/test/verifyPhase15Database.mjs
+node --env-file=.env.local scripts/test/testReferral.mjs
+node --env-file=.env.local scripts/test/testAffiliate.mjs
+node --env-file=.env.local scripts/test/testWeeklySummary.mjs
+```
+
+### API Endpoints Tested
+- ✅ **POST /api/referral** - Tracks referral clicks with IP hashing, increments user credits (+1)
+- ✅ **POST /api/affiliate** - Logs affiliate tool clicks with metadata (workspace, playbook, ref)
+- ✅ **POST /api/cron/weekly-summary** - Generates weekly newsletter (requires `WEEKLY_SUMMARY_SECRET`)
+- ⚠️ **POST /api/remix/[workspaceId]** - Clones published workspaces (requires published workspace for testing)
+
+### Database Tables
+| Table | Purpose | Test Rows |
+|-------|---------|-----------|
+| `workspace_remixes` | Workspace cloning tracking | 0 |
+| `referral_clicks` | Referral link clicks (SHA-256 hashed IPs) | 2 |
+| `affiliate_clicks` | Affiliate tool link tracking | 1 |
+| `user_credits` | User credit balance | 1 |
+
+### Known Issues Resolved
+1. **Column Types**: Changed `referrer_user_id` and `user_id` from `uuid` to `text` to support arbitrary referral codes
+2. **Foreign Key Ambiguity**: Fixed Supabase query in `runWeeklySummary.mjs` to specify `public_workspaces_workspace_id_fkey`
+3. **Test Parameters**: Fixed `testReferral.mjs` (`targetPath` → `target`) and `testAffiliate.mjs` (`tool` → `toolName`)
+
+See [docs/phase15-verification-results.md](docs/phase15-verification-results.md) for detailed test results and troubleshooting steps.
+
 ## Local QA
 - Use `npm run refresh:research` to simulate refreshes locally. The CLI prints per-project status (refreshed, simulated, failed), updates Supabase when a service role key is present, and exits with a non-zero code only if a refresh fails.
 - Run `npm run diagnose:system` to check whether diagnostics report the app as online, partially degraded, or offline before running automation.
