@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { PainPoint } from "@/types/painpoint";
@@ -30,14 +30,23 @@ export function PainPointCard({ painPoint }: PainPointCardProps) {
   const slug = painPoint.id;
 
   return (
-    <Link href={`/pain-points/${slug}`}>
+    <Link href={`/workspace/${painPoint.id}`}>
       <Card className="group h-full transition-all duration-200 hover:shadow-lg hover:border-primary/50 cursor-pointer">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-wrap gap-2">
+              {painPoint.related_playbook && (
+                <Badge
+                  variant="neutral"
+                  className="bg-green-100 text-green-800 border-green-300 border flex items-center gap-1"
+                >
+                  <BookOpen className="h-3 w-3" />
+                  Playbook Available
+                </Badge>
+              )}
               {painPoint.audience === "consumer" && (
                 <Badge
-                  variant="outline"
+                  variant="neutral"
                   className="bg-emerald-100 text-emerald-800 border-emerald-200 border"
                 >
                   Consumer Problem
@@ -45,14 +54,14 @@ export function PainPointCard({ painPoint }: PainPointCardProps) {
               )}
               {painPoint.category && (
                 <Badge
-                  variant="outline"
+                  variant="neutral"
                   className={`${categoryColor} border`}
                 >
                   {painPoint.category}
                 </Badge>
               )}
               {painPoint.niche && (
-                <Badge variant="outline" className="border-slate-200">
+                <Badge variant="neutral" className="border-slate-200">
                   {painPoint.niche}
                 </Badge>
               )}

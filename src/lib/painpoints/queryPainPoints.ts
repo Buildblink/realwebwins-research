@@ -31,6 +31,7 @@ export async function queryPainPoints(filters: PainPointFilters = {}): Promise<P
     niche = null,
     source = null,
     audience = null,
+    hasPlaybook = null,
     page = 1,
     pageSize = DEFAULT_PAGE_SIZE,
   } = filters;
@@ -63,6 +64,10 @@ export async function queryPainPoints(filters: PainPointFilters = {}): Promise<P
 
   if (audience && audience.toLowerCase() !== "all") {
     query = query.eq("audience", audience);
+  }
+
+  if (hasPlaybook === true) {
+    query = query.not("related_playbook", "is", null);
   }
 
   // Apply full-text search

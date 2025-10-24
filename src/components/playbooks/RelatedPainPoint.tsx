@@ -38,12 +38,12 @@ export function RelatedPainPoint({ painPoint }: RelatedPainPointProps) {
           <h3 className="font-semibold text-slate-900 mb-2">Problem This Solves</h3>
           <div className="flex flex-wrap gap-2 mb-3">
             {painPoint.category && (
-              <Badge variant="outline" className={`${categoryColor} border text-xs`}>
+              <Badge variant="neutral" className={`${categoryColor} border text-xs`}>
                 {painPoint.category}
               </Badge>
             )}
             {painPoint.niche && (
-              <Badge variant="outline" className="border-slate-200 text-xs">
+              <Badge variant="neutral" className="border-slate-200 text-xs">
                 {painPoint.niche}
               </Badge>
             )}

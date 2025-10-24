@@ -16,6 +16,7 @@ export async function GET(req: Request) {
     const niche = searchParams.get("niche") ?? undefined;
     const source = searchParams.get("source") ?? undefined;
     const audience = searchParams.get("audience") ?? undefined;
+    const hasPlaybook = searchParams.get("hasPlaybook") === "true";
     const page = parseNumber(searchParams.get("page"), 1);
     const pageSize = parseNumber(searchParams.get("pageSize"), 20);
 
@@ -25,6 +26,7 @@ export async function GET(req: Request) {
       niche,
       source,
       audience,
+      hasPlaybook,
       page,
       pageSize,
     });

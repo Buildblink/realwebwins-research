@@ -9,10 +9,12 @@ interface FilterBarProps {
   selectedNiche: string;
   selectedSource: string;
   selectedAudience: string;
+  hasPlaybook: boolean;
   onCategoryChange: (category: string) => void;
   onNicheChange: (niche: string) => void;
   onSourceChange: (source: string) => void;
   onAudienceChange: (audience: string) => void;
+  onHasPlaybookChange: (hasPlaybook: boolean) => void;
 }
 
 export function FilterBar({
@@ -24,10 +26,12 @@ export function FilterBar({
   selectedNiche,
   selectedSource,
   selectedAudience,
+  hasPlaybook,
   onCategoryChange,
   onNicheChange,
   onSourceChange,
   onAudienceChange,
+  onHasPlaybookChange,
 }: FilterBarProps) {
   return (
     <div className="flex flex-wrap gap-3">
@@ -105,6 +109,20 @@ export function FilterBar({
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="flex flex-col gap-1.5 justify-end">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={hasPlaybook}
+            onChange={(e) => onHasPlaybookChange(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300 text-secondary focus:ring-2 focus:ring-secondary/20 cursor-pointer"
+          />
+          <span className="text-sm font-medium text-slate-700">
+            Has Playbook
+          </span>
+        </label>
       </div>
     </div>
   );

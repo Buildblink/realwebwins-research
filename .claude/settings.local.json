@@ -4,7 +4,14 @@
       "Bash(npm run ensure:pain-points:*)",
       "Bash(npm run seed:playbooks:*)",
       "Bash(npm run test:playbooks:*)",
-      "Bash(npm run seed:consumer-pain-points:*)"
+      "Bash(npm run seed:consumer-pain-points:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run hybrid:discover:*)",
+      "Bash(npm run hybrid:generate:*)",
+      "Bash(npm run hybrid:refresh:*)",
+      "Bash(npm run dev:*)",
+      "Bash(node --env-file=.env.local -e:*)",
+      "Bash(node --env-file=.env.local scripts/fixPlaybookLinks.mjs:*)"
     ],
     "deny": [],
     "ask": []

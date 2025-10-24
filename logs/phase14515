@@ -1,0 +1,440 @@
+# Realwebwins — Phase 14.5 → 15 Build Plan
+**Focus:** Viral remix, simple referrals, weekly automation, and affiliate auto-embedding.  
+**Skip:** Leaderboard (kept minimal by design).
+
+---
+
+## 0) Scope & Goals
+- 🌀 **Remix Workspaces:** One-click clone of any published workspace into the user’s account.
+- 🔗 **Referrals (Lightweight):** Share links with `?ref=` tracking + credits counter.
+- 🗞 **Weekly Automation:** Auto-curate “Top New Workspaces” → newsletter draft + tweet snippets.
+- 💰 **Affiliate Auto-Embedding:** Parse playbook tools/links into rendered sections + track clicks.
+
+This plan assumes Phase 13–14 are live: analytics, recommendations, publishing, profiles, showcase.
+
+---
+
+## 1) Prerequisites
+- Supabase tables from Phase 13 & 14 exist (profiles, public_workspaces, referrals, workspace_remixes, workspace_outputs, workspaces).
+- Existing CLI exporters (`export:feed`, `export:newsletter`, `export:tweets`) and AgentStatus logging ready.
+- Buttondown or Beehiiv account (pick one).
+
+---
+
+## 2) Database Migrations
+**File:** `scripts/migrations/create_phase14_5_15_tables.sql`
+
+```sql
+-- Remix audit table (already present? ensure structure)
+CREATE TABLE IF NOT EXISTS workspace_remixes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  source_workspace_id uuid REFERENCES workspaces(id) ON DELETE SET NULL,
+  new_workspace_id uuid REFERENCES workspaces(id) ON DELETE CASCADE,
+  referrer_user_id uuid,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Lightweight referral clicks (no leaderboard, only credits)
+CREATE TABLE IF NOT EXISTS referral_clicks (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  referrer_user_id uuid,
+  target_path text,
+  ip_hash text,
+  user_agent text,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Affiliate click tracking
+CREATE TABLE IF NOT EXISTS affiliate_clicks (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id uuid,
+  playbook_slug text,
+  tool_name text,
+  url text,
+  ref text,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Optional: credit balance per user (basic integer)
+CREATE TABLE IF NOT EXISTS user_credits (
+  user_id uuid PRIMARY KEY,
+  balance int DEFAULT 0,
+  updated_at timestamptz DEFAULT now()
+);
+```
+
+Add to `package.json`:
+```json
+{
+  "scripts": {
+    "ensure:phase14_5-15-schema": "node --env-file=.env.local scripts/runSql.mjs scripts/migrations/create_phase14_5_15_tables.sql"
+  }
+}
+```
+
+---
+
+## 3) API Endpoints
+
+### 3.1 Remix Workspace
+**File:** `src/app/api/remix/[workspaceId]/route.ts`
+- `POST` → duplicates a published workspace into current user’s account
+  - Input: `{ ref?: string }` (optional referral code / user id)
+  - Steps:
+    1. Validate `workspaceId` is published.
+    2. Create new `workspaces` row for current user (copy title, pain point, meta).
+    3. Copy `workspace_outputs` (section → content → rating=0).
+    4. Insert into `workspace_remixes` with `source_workspace_id`, `new_workspace_id`, `referrer_user_id` (if ref present).
+    5. Return `{ success: true, newWorkspaceId }`.
+
+### 3.2 Referral Tracking
+**File:** `src/app/api/referral/route.ts`
+- `POST` → track a click on any URL with `?ref={user_id_or_code}`
+  - Body: `{ ref, target }`
+  - Store in `referral_clicks`, increment `user_credits.balance` by +1 (optional).
+
+### 3.3 Affiliate Click Tracking
+**File:** `src/app/api/affiliate/route.ts`
+- `POST` → `{ workspaceId, playbookSlug, toolName, url, ref? }`
+- Write to `affiliate_clicks`, optionally append `ref` to URL for downstream partner program.
+
+### 3.4 Weekly Summary (Cron)
+**File:** `src/app/api/cron/weekly-summary/route.ts`
+- `POST` only (guarded by secret)
+- Steps:
+  1. Query `public_workspaces` created in last 7 days, order by popularity (views/remixes).
+  2. Generate newsletter via existing exporter (`scripts/auto/runWeeklySummary.mjs`) or inline.
+  3. Save JSON summary to `exports/weekly/manifest-YYYY-WW.json` and log to AgentStatus.
+  4. (Optional) send draft to Buttondown/Beehiiv API.
+
+---
+
+## 4) Server Logic & Libraries
+
+### 4.1 Remix Service
+**File:** `src/lib/workspace/remix.ts`
+- `cloneWorkspace(sourceId, userId) -> newWorkspaceId`
+- Copies rows, regenerates slugs/ids, clears ratings.
+
+### 4.2 Affiliate Embedding
+**File:** `src/lib/workspace/affiliate.ts`
+- `extractAffiliateBlocks(playbook)` → returns normalized list of `{ toolName, url, badge?, price? }`
+- `injectAffiliateBlocks(markdown)` → injects blocks at end of sections or under “Tools” subheading.
+- Used by workspace section renderer + playbook renderer.
+- All affiliate links point to `/api/affiliate` to track, then redirect to actual URL.
+
+### 4.3 Weekly Summary Script (CLI)
+**File:** `scripts/auto/runWeeklySummary.mjs`
+- Reads latest published workspaces
+- Builds newsletter markdown + HTML
+- Exports tweet snippets (top 5)
+- Writes files → `exports/weekly/{YYYY-WW}/`
+- Logs to AgentStatus (idea="weekly-summary", stage="run")
+
+Add script:
+```json
+{
+  "scripts": {
+    "weekly:summary": "node --env-file=.env.local scripts/auto/runWeeklySummary.mjs"
+  }
+}
+```
+
+---
+
+## 5) UI Changes
+
+### 5.1 “Remix This” Button
+**File:** `src/components/workspace/RemixButton.tsx`
+- Visible on: public workspace page + showcase card
+- `onClick` → POST `/api/remix/{workspaceId}` with optional `ref`
+- On success → redirect to `/workspace/{newId}` with toast “Remixed to your account”
+
+### 5.2 Share / Referral Link
+**File:** `src/components/workspace/ShareMenu.tsx`
+- Copy-to-clipboard for:  
+  - Public link: `/workspace/{publishedSlug}`  
+  - Referral link: `/workspace/{publishedSlug}?ref={currentUserId}`
+- Calls `/api/referral` on click (best-effort)
+
+### 5.3 Affiliate Blocks in Renderer
+**Files:** 
+- `src/components/workspace/SectionPanel.tsx` (or your markdown renderer)
+- `src/components/playbooks/PlaybookContent.tsx`
+- Use `injectAffiliateBlocks()` to append styled blocks:
+  - shadcn `Card`: tool name, short description, “Try it →” button
+  - Button links to `/api/affiliate` (tracks, redirects)
+
+### 5.4 Showcase Cards
+**File:** `src/components/showcase/WorkspaceCard.tsx`
+- Add small “Remix count” and “Last 7d views” badges (optional, no leaderboard).
+
+---
+
+## 6) Env Vars
+Add to `.env.local`:
+```
+WEEKLY_SUMMARY_SECRET=super-secret-token
+NEWSLETTER_PROVIDER=buttondown # or beehiiv
+BUTTONDOWN_API_KEY=...
+BEEHIIV_API_KEY=...
+AFFILIATE_REDIRECT_BASE=https://yourdomain.com/api/affiliate
+```
+
+If running cron on Vercel:
+**`vercel.json`**
+```json
+{
+  "crons": [
+    { "path": "/api/cron/weekly-summary", "schedule": "0 9 * * 1" }
+  ]
+}
+```
+
+---
+
+## 7) Testing Checklist
+
+### Remix
+- Publish a workspace → click **Remix This** → new workspace appears under your account.
+- Confirm all sections copied and ratings reset.
+- Supabase rows exist in `workspace_remixes`.
+
+### Referral
+- Copy referral link → open in incognito → visit logs a `referral_clicks` row.
+- Optional: user_credits increments by +1.
+
+### Affiliate
+- Open a playbook/workspace with tool links → click **Try it** → endpoint `/api/affiliate` logs, then redirects to vendor.
+- Confirm `affiliate_clicks` row exists.
+
+### Weekly Summary
+- Run: `npm run weekly:summary`  
+- Check files in `exports/weekly/{YYYY-WW}/`  
+- (If configured) Check your newsletter provider for new draft.
+
+---
+
+## 8) Rollout
+1. Run migration: `npm run ensure:phase14_5-15-schema`
+2. Deploy API & UI
+3. Add “Remix This” to showcase & workspace page
+4. Add share/referral menu
+5. Configure cron (optional)
+6. Monitor AgentStatus + Supabase tables for activity
+
+---
+
+## 9) Out-of-Scope (Intentionally Skipped)
+- Leaderboard pages or gamification UI
+- Complex credit systems (only simple counter for now)
+- On-chain/attestation layers
+
+---
+
+## 10) Success Criteria
+- ≥ 30% of public workspace visitors click **Remix**
+- ≥ 10% of published workspaces receive at least one remix within 7 days
+- Weekly summary consistently outputs newsletter/tweets
+- Affiliate clicks are recorded and ≥ 3% CTR on tool blocks
+
+
+# Phase 14.5 → 15 Build Plan
+_Realwebwins Growth Engine — Remix • Referrals • Weekly Summary • Affiliate Integration_
+
+## ✅ Confirmed Scope
+You’ve chosen to build the following first:
+- Remix system
+- Referral tracking
+- Weekly summary automation (manual first, cron later)
+- Affiliate parsing and redirects (read-only)
+
+## ❌ Deferred for Later
+- User credits and payouts
+- Direct Beehiiv/Buttondown newsletter sync
+
+---
+
+## 🧱 1. Database Migration
+**File:** `scripts/migrations/create_phase14_5_15_tables.sql`
+
+```sql
+CREATE TABLE IF NOT EXISTS referral_clicks (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES profiles(id),
+  ref_code text,
+  ip_hash text,
+  user_agent text,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS affiliate_clicks (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id uuid REFERENCES workspaces(id),
+  tool_name text,
+  affiliate_url text,
+  ip_hash text,
+  user_agent text,
+  created_at timestamptz DEFAULT now()
+);
+```
+
+Add to `package.json`:
+```json
+"scripts": {
+  "ensure:phase14_5-15-schema": "node --env-file=.env.local scripts/ensurePhase14_5_15Schema.mjs"
+}
+```
+
+---
+
+## 🔌 2. API Endpoints
+
+### `/api/remix/[workspaceId]/route.ts`
+**POST:** Clone workspace → new user
+- Copies workspace + workspace_outputs
+- Resets ratings
+- Inserts into `workspace_remixes`
+
+### `/api/referral/route.ts`
+**POST:** Track `?ref=` link clicks
+- Stores hashed IP + user agent
+- Optionally increments credits later
+
+### `/api/affiliate/route.ts`
+**GET:** Redirect to affiliate link
+**POST:** Log click before redirect
+- Uses helper from `src/lib/workspace/affiliate.ts`
+
+### `/api/cron/weekly-summary/route.ts`
+**POST (secure):** Trigger weekly automation
+- Queries `public_workspaces` (last 7d)
+- Generates newsletter/tweet drafts
+
+---
+
+## 🧠 3. Libraries
+
+### `src/lib/workspace/remix.ts`
+```ts
+export async function cloneWorkspace(sourceId: string, userId: string) {
+  // 1. Fetch workspace + outputs
+  // 2. Create new workspace entry for user
+  // 3. Copy outputs, reset ratings
+  // 4. Return new workspace ID
+}
+```
+
+### `src/lib/workspace/affiliate.ts`
+```ts
+export function extractAffiliateBlocks(content: string) { /* parse markdown */ }
+export function injectAffiliateBlocks(markdown: string) { /* append styled cards */ }
+export async function trackAffiliateClick(ctx) { /* log click */ }
+```
+
+---
+
+## 🗓 4. Weekly Automation
+**File:** `scripts/auto/runWeeklySummary.mjs`
+
+- Query `public_workspaces` from last 7 days
+- Generate newsletter markdown + HTML
+- Create tweet snippets (top 5)
+- Write to `exports/weekly/{YYYY-WW}/`
+- Expose via `/api/cron/weekly-summary`
+
+**Run manually:**
+```bash
+npm run weekly:summary
+```
+
+**Add later (Vercel cron):**
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron/weekly-summary",
+      "schedule": "0 9 * * 1"
+    }
+  ]
+}
+```
+
+---
+
+## 🎨 5. UI Components
+
+### `RemixButton.tsx`
+- Visible on workspace + showcase
+- Calls `/api/remix`
+- Redirects to new workspace with toast
+
+### `ShareMenu.tsx`
+- Copy public + referral links
+- Logs share events
+
+### `AffiliateBlock.tsx`
+- Styled tool cards with CTA
+- Uses `/api/affiliate` for click tracking
+
+**Integration Points:**
+- `SectionPanel.tsx` → Inject affiliate blocks
+- `WorkspaceCard.tsx` → Show remix count badge
+- `workspace/[id]/page.tsx` → Add Remix + Share buttons
+
+---
+
+## 🔑 Environment Variables
+
+```env
+WEEKLY_SUMMARY_SECRET=your_secret
+AFFILIATE_REDIRECT_BASE=https://realwebwins.com/api/affiliate
+NEWSLETTER_PROVIDER=local
+```
+
+---
+
+## 🧪 6. Testing Flow
+
+1. Run migration:
+   ```bash
+   npm run ensure:phase14_5-15-schema
+   ```
+2. Test Remix flow:
+   - Open a published workspace
+   - Click **Remix This**
+   - Confirm new workspace appears
+3. Test Referral tracking:
+   - Share `?ref=userid`
+   - Visit incognito → verify `/api/referral` logs event
+4. Test Weekly summary:
+   ```bash
+   npm run weekly:summary
+   ```
+   - Check `/exports/weekly/{YYYY-WW}/newsletter.md`
+5. Test Affiliate redirect:
+   - Click tool link → verify `/api/affiliate` logs click
+
+---
+
+## 🚀 7. Rollout Plan
+1. Implement migration + API routes
+2. Add new components to workspace & showcase
+3. Verify remix + referral workflows locally
+4. Run weekly summary manually → verify export
+5. Deploy to Vercel
+6. (Optional) enable cron in `vercel.json`
+
+---
+
+## ✅ Expected Outcomes
+- Users can remix and share workspaces
+- Referral traffic tracked via ?ref= links
+- Weekly digest auto-generated for newsletter/social
+- Affiliate clicks tracked from workspace tool mentions
+
+---
+
+---
+
+**End — Phase 14.5 → 15 Build Plan**
