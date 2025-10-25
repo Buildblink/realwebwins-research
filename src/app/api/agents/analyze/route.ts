@@ -3,15 +3,40 @@ import { randomUUID } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { relayMessage } from "@/lib/agents";
 
-const ANALYZED_TABLES = [
+type AnalyzeConfig = {
+  table: string;
+  columns: string;
+  orderColumn?: string;
+  insightType: string;
+  limit: number;
+};
+
+type PainPointRecord = {
+  id: string;
+  text?: string | null;
+  category?: string | null;
+  niche?: string | null;
+  source?: string | null;
+  frequency?: number | null;
+};
+
+type AnalyzeResult = {
+  table: string;
+  sourceId: string;
+  summary: string | null;
+  success: boolean;
+  error?: string;
+};
+
+const ANALYZED_TABLES: ReadonlyArray<AnalyzeConfig> = [
   {
     table: "pain_points",
-    columns: "id, text, category, niche, source, frequency, last_seen",
-    orderColumn: "last_seen",
+    columns: "id, text, category, niche, source, frequency",
+    orderColumn: "created_at",
     insightType: "trend_analysis",
     limit: 5,
   },
-] as const;
+];
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey =
@@ -25,57 +50,92 @@ if (!supabaseUrl || !serviceRoleKey) {
 }
 
 const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
 });
 
 export async function POST() {
   const conversationId = randomUUID();
-  const results: any[] = [];
+  const results: AnalyzeResult[] = [];
 
   for (const config of ANALYZED_TABLES) {
     const { data, error } = await supabase
-      .from(config.table)
+      .from<PainPointRecord>(config.table)
       .select(config.columns)
       .order(config.orderColumn ?? "created_at", { ascending: false })
       .limit(config.limit);
 
-    if (error || !data) {
+    if (error) {
+      console.error(`[agents.analyze] Fetch failed for ${config.table}:`, error);
       results.push({
         table: config.table,
+        sourceId: "unknown",
+        summary: null,
         success: false,
         error: "FETCH_FAILED",
       });
       continue;
     }
 
-    for (const record of data as any[]) {
-      const sourceId = record.id;
-      if (!sourceId) continue;
+    const records = data ?? [];
+    if (records.length === 0) {
+      results.push({
+        table: config.table,
+        sourceId: "none",
+        summary: null,
+        success: true,
+      });
+      continue;
+    }
 
-      const text = record.text ?? "(no description)";
+    for (const record of records) {
+      const sourceId = record.id;
+      if (!sourceId) {
+        results.push({
+          table: config.table,
+          sourceId: "missing",
+          summary: null,
+          success: false,
+          error: "MISSING_SOURCE_ID",
+        });
+        continue;
+      }
+
       const prompt = [
         "You are the Realwebwins research analyst agent.",
-        "Analyze the following entry and produce concise insights:",
+        "Analyze the following entry and produce a concise summary of trends, risks, and recommended action items.",
+        "Use bullet points starting with '-' for each recommendation.",
         "",
         `Category: ${record.category ?? ""}`,
         `Niche: ${record.niche ?? ""}`,
         `Source: ${record.source ?? ""}`,
-        `Frequency: ${record.frequency ?? ""}`,
+        `Frequency signal: ${record.frequency ?? "n/a"}`,
         "",
         "Pain point:",
-        text,
+        record.text ?? "(no description provided)",
       ].join("\n");
 
-      // Log message
-      await supabase.from("agent_messages").insert([
-        {
-          conversation_id: conversationId,
-          sender_agent: "agent_orchestrator",
-          receiver_agent: "agent_researcher",
-          role: "system",
-          content: prompt,
-        },
-      ]);
+      const { error: messageError } = await supabase
+        .from("agent_messages")
+        .insert([
+          {
+            conversation_id: conversationId,
+            sender_agent: "agent_orchestrator",
+            receiver_agent: "agent_researcher",
+            role: "system",
+            content: prompt,
+            meta: {
+              source_table: config.table,
+              source_id: sourceId,
+            },
+          },
+        ]);
+
+      if (messageError) {
+        console.error("[agents.analyze] Failed to log agent message:", messageError);
+      }
 
       try {
         const reply = await relayMessage({
@@ -85,29 +145,65 @@ export async function POST() {
           content: prompt,
         });
 
-        // ✅ FIX: Include source_table + remove invalid meta
-        const { error: insertError } = await supabase
-          .from("agent_insights")
-          .insert([
-            {
-              agent_id: "agent_researcher",
-              source_table: config.table, // 👈 mandatory
-              source_id: sourceId,
-              insight_type: config.insightType,
-              summary: reply ?? "No summary returned",
-              confidence: 0.9,
-            },
-          ]);
+        const { error: insightError } = await supabase.from("agent_insights").insert([
+          {
+            agent_id: "agent_researcher",
+            source_table: config.table,
+            source_id: sourceId,
+            insight_type: config.insightType,
+            summary: reply ?? "(no reply)",
+            confidence: 0.9,
+            meta: { prompt },
+          },
+        ]);
 
-        if (insertError) throw insertError;
+        if (insightError) {
+          throw new Error(insightError.message);
+        }
 
         results.push({
           table: config.table,
           sourceId,
+          summary: reply ?? null,
           success: true,
         });
-      } catch (relayError) {
-        console.error("[agents.analyze] relay failed:", relayError);
+      } catch (analysisError) {
+        const message =
+          analysisError instanceof Error ? analysisError.message : String(analysisError);
+
+        console.error(
+          `[agents.analyze] Analysis failed for ${config.table} (${sourceId}):`,
+          analysisError
+        );
+
+        const { error: failureLogError } = await supabase
+          .from("agent_insights")
+          .insert([
+            {
+              agent_id: "agent_researcher",
+              source_table: config.table,
+              source_id: sourceId,
+              insight_type: "analysis_failed",
+              summary: "Autonomous analysis failed. Review meta.error for details.",
+              confidence: 0.1,
+              meta: { prompt, error: message },
+            },
+          ]);
+
+        if (failureLogError) {
+          console.error(
+            "[agents.analyze] Failed to log analysis failure:",
+            failureLogError
+          );
+        }
+
+        results.push({
+          table: config.table,
+          sourceId,
+          summary: null,
+          success: false,
+          error: message,
+        });
       }
     }
   }

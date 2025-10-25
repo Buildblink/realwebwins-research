@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
 
-export async function GET(req: Request, context: any) {
+export const dynamic = "force-dynamic";
+
+export async function GET(
+  _request: Request,
+  context: { params: { conversationId: string } }
+) {
   const { conversationId } = context.params;
   const supabase = getSupabaseAdminClient();
 
@@ -32,4 +37,3 @@ export async function GET(req: Request, context: any) {
     );
   }
 }
-
