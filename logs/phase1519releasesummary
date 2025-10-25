@@ -1,0 +1,99 @@
+# 🚀 Realwebwins — Phase 15 → 19 Stable Release Summary
+
+**Release:** `phase19-stable`  
+**Repository:** [Buildblink/realwebwins-research](https://github.com/Buildblink/realwebwins-research)  
+**Environment:** Vercel (Production) + Supabase (Postgres)  
+**Verified Build:** ✅ Passed local + production verification (2025-10-25)
+
+---
+
+## 🧩 Phase Overview
+
+| Phase | Focus | Status | Notes |
+|-------|--------|--------|-------|
+| 15.1 | Analytics Metrics + Cron Aggregation | ✅ Complete | Weekly viral growth metrics aggregation (Remix, Referral, Affiliate, Credits) |
+| 15.2 | Analytics Dashboard | ✅ Complete | Recharts-based admin dashboard with KPI cards & charts |
+| 15.3 | Global Dark Theme Unification | ✅ Complete | Applied universal dark UI theme across all pages/components |
+| 15.4 | Public Dashboard Export | ⏸ Deferred | Planned for future static export of insights |
+| 15.5 | Leaderboards | ⏸ Deferred | Optional future feature |
+| 16 | Community Integration | ⏸ Deferred | Moved to next cycle |
+| 17 | Agent Messaging System | ✅ Complete | Core relay messaging between agents |
+| 18 | Agent Relay + Human Interaction | ✅ Complete | Two-way AI↔human message pipeline |
+| 19 | Autonomous Insights System | ✅ Complete | Auto-analysis of pain points → stored insights via OpenAI relay |
+
+---
+
+## ⚙️ Environment Variables
+
+| Variable | Description |
+|-----------|--------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service key |
+| `WEEKLY_SUMMARY_SECRET` | Cron auth secret |
+| `OPENAI_API_KEY` | Required for relay and insights |
+| `OPENAI_AGENT_MODEL` | e.g. `gpt-4o-mini` |
+| `AI_PROVIDER` | `local` |
+| `AI_MODEL` | `claude-3-sonnet-20240620` |
+| `ADMIN_MODE` | `true` |
+| `PLAUSIBLE_DOMAIN` | `realwebwins-research.vercel.app` |
+
+---
+
+## 🧪 Verification Scripts
+
+| Script | Purpose |
+|---------|----------|
+| `scripts/test/verifyAnalytics.mjs` | Validates metrics + cron endpoints |
+| `scripts/test/verifyAgentRelay.mjs` | Tests AI relay conversation flow |
+| `scripts/test/verifyAgentInsights.mjs` | Confirms autonomous analysis storage |
+| `scripts/verifyEnv.mjs` | Ensures all env vars + Supabase connectivity |
+
+Run examples:
+```bash
+node --env-file=.env.local scripts/verifyEnv.mjs
+node --env-file=.env.local scripts/test/verifyAnalytics.mjs
+node --env-file=.env.local scripts/test/verifyAgentRelay.mjs
+node --env-file=.env.local scripts/test/verifyAgentInsights.mjs
+```
+
+---
+
+## 🚀 Deployment Instructions
+
+1. Ensure `.env.local` contains all required keys.  
+2. Run local verification:
+   ```bash
+   npm run build && npm run start
+   ```
+3. Push verified changes to main:
+   ```bash
+   git add .
+   git commit -m "Phase 15-19 stable release"
+   git push origin main
+   ```
+4. Force redeploy on Vercel:
+   ```bash
+   vercel --prod --force
+   ```
+
+---
+
+## 🧭 Next Phases (Preview)
+
+| Phase | Goal |
+|--------|------|
+| 20 | Agent Collaboration Layer — agents autonomously exchange context |
+| 21 | Public Showcase Export — render interactive case dashboards |
+| 22 | Research Feed & Weekly Digest — publish verified agent findings |
+
+---
+
+✅ **Status:** All Phases (15.1–19) production-ready  
+🧩 **Last Verified Build:** `npm run build` (Oct 25, 2025) — Passed  
+📦 **Output Tag:** `phase19-stable`  
+🧠 **AI Relay:** Working (Agent ↔ Human ↔ Insights)  
+💾 **Supabase:** All schemas verified & indexed  
+
+---
+© 2025 Realwebwins Research — Phase 19 Autonomous Release Summary
