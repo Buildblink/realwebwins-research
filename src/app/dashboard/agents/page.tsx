@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useState } from "react";
 import useSWR from "swr";
 import InsightsList from "@/components/agents/InsightsList";
+import { AgentTabs } from "@/components/agents/AgentTabs";
 
 interface ConversationMessage {
   id: string;
@@ -117,6 +118,8 @@ export default function AgentDashboard() {
             Observe inter-agent threads, inject human prompts, and trigger autonomous research.
           </p>
         </header>
+
+        <AgentTabs />
 
         <section className="rounded-lg border border-white/10 bg-[#111113] p-4">
           <header className="mb-3">

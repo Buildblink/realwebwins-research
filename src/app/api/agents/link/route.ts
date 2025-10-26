@@ -4,7 +4,9 @@ import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
 interface LinkPayload {
   source_agent?: string;
   target_agent?: string;
+  collaboration_type?: string;
   relationship?: string;
+  strength?: number;
   context?: unknown;
 }
 
@@ -14,7 +16,14 @@ export async function POST(request: Request) {
 
   const sourceAgent = body.source_agent?.trim();
   const targetAgent = body.target_agent?.trim();
-  const relationship = body.relationship?.trim() || "peer";
+  const collaborationType =
+    body.collaboration_type?.trim().toLowerCase() ??
+    body.relationship?.trim().toLowerCase() ??
+    "relay";
+  const strength =
+    typeof body.strength === "number" && Number.isFinite(body.strength)
+      ? Math.max(0, Math.min(1, body.strength))
+      : 0.5;
 
   if (!sourceAgent || !targetAgent) {
     return NextResponse.json(
@@ -33,7 +42,8 @@ export async function POST(request: Request) {
       {
         source_agent: sourceAgent,
         target_agent: targetAgent,
-        relationship,
+        collaboration_type: collaborationType,
+        strength,
         context:
           typeof body.context === "object" && body.context !== null
             ? body.context

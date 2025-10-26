@@ -1,111 +1,77 @@
 import { NextResponse } from "next/server";
-import { exec } from "child_process";
-import { promisify } from "util";
+import {
+  calculateAgentLeaderboard,
+  persistLeaderboard,
+} from "@/lib/agents/leaderboard";
+import {
+  buildWeeklySummary,
+  sendWeeklySummaryEmail,
+  storeWeeklySummary,
+} from "@/lib/agents/summary";
 
-const execAsync = promisify(exec);
-
-/**
- * POST /api/cron/weekly-summary
- * Trigger the weekly summary generation script
- * Protected by secret token
- */
-export async function POST(request: Request) {
-  try {
-    // 1. Verify secret token
-    const authHeader = request.headers.get("authorization");
-    const expectedSecret = process.env.WEEKLY_SUMMARY_SECRET;
-
-    if (!expectedSecret) {
-      console.error("[cron.weekly-summary] WEEKLY_SUMMARY_SECRET not configured");
-      return NextResponse.json(
-        {
-          success: false,
-          error: "SERVER_MISCONFIGURED",
-          message: "Server is not configured for weekly summaries",
-        },
-        { status: 500 }
-      );
-    }
-
-    const providedSecret = authHeader?.replace("Bearer ", "");
-
-    if (providedSecret !== expectedSecret) {
-      console.warn("[cron.weekly-summary] Unauthorized attempt");
-      return NextResponse.json(
-        {
-          success: false,
-          error: "UNAUTHORIZED",
-          message: "Invalid authorization token",
-        },
-        { status: 401 }
-      );
-    }
-
-    // 2. Run the weekly summary script
-    console.log("[cron.weekly-summary] Starting weekly summary generation...");
-
-    const { stdout, stderr } = await execAsync(
-      "npm run weekly:summary",
-      {
-        cwd: process.cwd(),
-        env: {
-          ...process.env,
-          NODE_ENV: "production",
-        },
-        timeout: 60000, // 1 minute timeout
-      }
+function isAuthorized(request: Request) {
+  const expected = process.env.WEEKLY_SUMMARY_SECRET;
+  if (!expected) {
+    console.warn(
+      "[weekly-summary.cron] WEEKLY_SUMMARY_SECRET not set; rejecting request."
     );
+    return false;
+  }
+  const header = request.headers.get("authorization");
+  return header === `Bearer ${expected}`;
+}
 
-    console.log("[cron.weekly-summary] Script output:", stdout);
-
-    if (stderr) {
-      console.warn("[cron.weekly-summary] Script warnings:", stderr);
-    }
-
-    // 3. Log success event
-    try {
-      await fetch(`${request.url.replace(/\/api\/cron\/.*/, "")}/api/events`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event: "weekly_summary_generated",
-          context: {
-            timestamp: new Date().toISOString(),
-          },
-        }),
-      });
-    } catch (eventError) {
-      console.warn("[cron.weekly-summary] Failed to log event:", eventError);
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: "Weekly summary generated successfully",
-      output: stdout,
-    });
-  } catch (error) {
-    console.error("[cron.weekly-summary] Failed to generate summary:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-
+export async function POST(request: Request) {
+  if (!isAuthorized(request)) {
     return NextResponse.json(
       {
         success: false,
-        error: "GENERATION_FAILED",
-        message: `Failed to generate weekly summary: ${message}`,
+        error: "UNAUTHORIZED",
+        message: "Invalid or missing authorization.",
+      },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const recompute = await calculateAgentLeaderboard();
+
+    if (recompute.entries.length > 0) {
+      await persistLeaderboard(recompute.entries, recompute.insights);
+    }
+
+    const summary = await buildWeeklySummary({
+      entries: recompute.entries,
+      insights: recompute.insights,
+    });
+
+    const record = await storeWeeklySummary({
+      weekStart: summary.weekStart,
+      report: summary.report,
+      markdown: summary.markdown,
+    });
+
+    await sendWeeklySummaryEmail({
+      markdown: summary.markdown,
+      subject: `RealWebWins Weekly Summary (${summary.weekStart})`,
+    });
+
+    return NextResponse.json({
+      success: true,
+      stored: record?.id ?? null,
+      weekStart: summary.weekStart,
+      agents: recompute.entries.length,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[weekly-summary.cron] Failed to generate summary", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "SUMMARY_FAILED",
+        message,
       },
       { status: 500 }
     );
   }
-}
-
-/**
- * GET /api/cron/weekly-summary
- * Health check endpoint
- */
-export async function GET() {
-  return NextResponse.json({
-    success: true,
-    message: "Weekly summary cron endpoint is active",
-    configured: !!process.env.WEEKLY_SUMMARY_SECRET,
-  });
 }

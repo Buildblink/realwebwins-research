@@ -4,7 +4,8 @@ interface AgentLinkRow {
   id: string;
   source_agent: string;
   target_agent: string;
-  relationship: string | null;
+  collaboration_type: string | null;
+  strength: number | null;
   context: Record<string, unknown> | null;
   created_at: string;
 }
@@ -17,7 +18,8 @@ export interface AgentNetworkLink {
   id: string;
   source_agent: string;
   target_agent: string;
-  relationship: string | null;
+  collaboration_type: string | null;
+  strength: number | null;
   context: Record<string, unknown> | null;
   created_at: string;
 }
@@ -56,7 +58,8 @@ export async function getAgentNetwork(): Promise<AgentNetworkGraph> {
       id: link.id,
       source_agent: link.source_agent,
       target_agent: link.target_agent,
-      relationship: link.relationship,
+      collaboration_type: link.collaboration_type,
+      strength: link.strength,
       context: link.context,
       created_at: link.created_at,
     })),

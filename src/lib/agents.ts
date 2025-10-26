@@ -8,7 +8,7 @@ interface RelayMessageParams {
 
 const DEFAULT_RECEIVER = "agent_alpha";
 
-function resolveApiBase(override?: string): string {
+export function resolveApiBase(override?: string): string {
   if (override) {
     return override.replace(/\/$/, "");
   }

@@ -10,7 +10,8 @@ interface AgentNetworkResponse {
     id: string;
     source_agent: string;
     target_agent: string;
-    relationship?: string | null;
+    collaboration_type?: string | null;
+    strength?: number | null;
   }>;
 }
 
@@ -90,11 +91,16 @@ export default function AgentNetworkPage() {
                     className="rounded-md border border-white/5 bg-[#1b1b1f] px-3 py-2 text-sm text-zinc-200"
                   >
                     <span className="text-indigo-300">{link.source_agent}</span>
-                    <span className="px-2 text-xs text-zinc-500">→</span>
+                    <span className="px-2 text-xs text-zinc-500">-&gt;</span>
                     <span className="text-emerald-300">{link.target_agent}</span>
-                    {link.relationship && (
+                    {link.collaboration_type && (
                       <span className="ml-3 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs uppercase tracking-wide text-zinc-300">
-                        {link.relationship}
+                        {link.collaboration_type}
+                      </span>
+                    )}
+                    {typeof link.strength === "number" && (
+                      <span className="ml-2 text-xs text-zinc-400">
+                        Strength {(link.strength * 100).toFixed(0)}%
                       </span>
                     )}
                   </motion.div>

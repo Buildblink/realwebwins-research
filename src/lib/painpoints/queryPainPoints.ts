@@ -1,5 +1,10 @@
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
-import type { PainPoint, PainPointFilters, PainPointResponse } from "@/types/painpoint";
+import type {
+  PainPoint,
+  PainPointFilters,
+  PainPointResponse,
+  PainPointSeed,
+} from "@/types/painpoint";
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -73,10 +78,10 @@ export async function queryPainPoints(filters: PainPointFilters = {}): Promise<P
   // Apply full-text search
   if (search && search.trim().length > 0) {
     const searchTerm = search.trim();
-    query = query.textSearch("text", searchTerm, {
-      type: "websearch",
-      config: "english",
-    });
+    const ilike = `%${searchTerm}%`;
+    query = query.or(
+      `text.ilike.${ilike},summary.ilike.${ilike},category.ilike.${ilike},niche.ilike.${ilike}`
+    );
   }
 
   const { data, error, count } = await query;
@@ -89,12 +94,16 @@ export async function queryPainPoints(filters: PainPointFilters = {}): Promise<P
   const painPoints: PainPoint[] = (data ?? []).map((item) => ({
     id: item.id,
     text: item.text ?? "",
+    summary: item.summary ?? item.text ?? "",
     category: item.category ?? null,
     niche: item.niche ?? null,
     source: item.source ?? null,
     audience: item.audience ?? null,
     frequency: typeof item.frequency === "number" ? item.frequency : null,
+    popularity_score:
+      typeof item.popularity_score === "number" ? item.popularity_score : null,
     proof_link: item.proof_link ?? null,
+    proof_links: Array.isArray(item.proof_links) ? item.proof_links : null,
     related_case_id: item.related_case_id ?? null,
     related_playbook: item.related_playbook ?? null,
     last_seen: item.last_seen ?? null,
@@ -134,12 +143,16 @@ export async function getPainPointById(id: string): Promise<PainPoint | null> {
   return {
     id: data.id,
     text: data.text ?? "",
+    summary: data.summary ?? data.text ?? "",
     category: data.category ?? null,
     niche: data.niche ?? null,
     source: data.source ?? null,
     audience: data.audience ?? null,
     frequency: typeof data.frequency === "number" ? data.frequency : null,
+    popularity_score:
+      typeof data.popularity_score === "number" ? data.popularity_score : null,
     proof_link: data.proof_link ?? null,
+    proof_links: Array.isArray(data.proof_links) ? data.proof_links : null,
     related_case_id: data.related_case_id ?? null,
     related_playbook: data.related_playbook ?? null,
     last_seen: data.last_seen ?? null,
@@ -237,4 +250,35 @@ export async function getPainPointAudiences(): Promise<string[]> {
   }
 
   return Array.from(audiences).sort();
+}
+
+export async function createPainPoint(seed: PainPointSeed) {
+  const supabase = getSupabaseAdminClient();
+  const payload = {
+    text: seed.text,
+    summary: seed.summary ?? seed.text,
+    category: seed.category ?? null,
+    niche: seed.niche ?? null,
+    source: seed.source ?? null,
+    audience: seed.audience ?? null,
+    frequency: typeof seed.frequency === "number" ? seed.frequency : 1,
+    popularity_score:
+      typeof seed.popularity_score === "number" ? seed.popularity_score : null,
+    proof_link: seed.proof_link ?? null,
+    proof_links: Array.isArray(seed.proof_links) ? seed.proof_links : null,
+    related_playbook: seed.related_playbook ?? null,
+  };
+
+  const { data, error } = await supabase
+    .from("pain_points")
+    .insert([payload])
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[painpoints.create] Failed to insert pain point", error);
+    throw error;
+  }
+
+  return data;
 }

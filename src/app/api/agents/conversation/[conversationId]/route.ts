@@ -1,39 +1,36 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
+import { createClient } from "@supabase/supabase-js";
 
-export const dynamic = "force-dynamic";
+type RouteContext = {
+  params: {
+    conversationId: string;
+  };
+};
 
 export async function GET(
   _request: Request,
-  context: { params: { conversationId: string } }
-) {
-  const { conversationId } = context.params;
-  const supabase = getSupabaseAdminClient();
+  { params }: RouteContext
+): Promise<Response> {
+  const { conversationId } = params;
 
-  try {
-    const { data, error } = await supabase
-      .from("agent_messages")
-      .select("*")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true });
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
-    if (error) {
-      console.error("[conversation.GET] Failed to fetch messages:", error);
-      return NextResponse.json(
-        { success: false, error: "DB_FETCH_FAILED" },
-        { status: 500 }
-      );
-    }
+  const { data, error } = await supabase
+    .from("agent_messages")
+    .select("*")
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending: true });
 
-    return NextResponse.json({
-      success: true,
-      messages: data ?? [],
-    });
-  } catch (err) {
-    console.error("[conversation.GET] Unexpected error:", err);
+  if (error) {
+    console.error("[agents.conversation] Failed to load messages", error);
     return NextResponse.json(
-      { success: false, error: "UNEXPECTED_ERROR" },
+      { success: false, error: error.message },
       { status: 500 }
     );
   }
+
+  return NextResponse.json({ success: true, messages: data ?? [] });
 }
