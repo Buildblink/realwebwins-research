@@ -19,6 +19,7 @@ function parseFilters(url: URL): PainPointFilters {
     pageSize: url.searchParams.get("pageSize")
       ? Number.parseInt(url.searchParams.get("pageSize") as string, 10)
       : undefined,
+    sort: (url.searchParams.get("sort") as PainPointFilters["sort"]) ?? undefined,
   };
 }
 

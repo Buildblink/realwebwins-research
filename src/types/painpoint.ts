@@ -54,6 +54,7 @@ export interface PainPointFilters {
   hasPlaybook?: boolean;
   page?: number;
   pageSize?: number;
+  sort?: "popularity" | "recent";
 }
 
 // API response structure with pagination

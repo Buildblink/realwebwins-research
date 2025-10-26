@@ -1,11 +1,18 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { DiscoverClient } from "@/app/discover/discover-client";
-import { queryPainPoints } from "@/lib/painpoints/queryPainPoints";
+import {
+  getPainPointCategories,
+  queryPainPoints,
+} from "@/lib/painpoints/queryPainPoints";
 
 export const dynamic = "force-dynamic";
 
 export default async function DiscoverPage() {
-  const { data } = await queryPainPoints({ pageSize: 12, page: 1 });
+  const [{ data }, categories] = await Promise.all([
+    queryPainPoints({ pageSize: 12, page: 1, sort: "popularity" }),
+    getPainPointCategories(),
+  ]);
+  const trending = (await queryPainPoints({ pageSize: 6, page: 1, sort: "popularity" })).data;
 
   return (
     <AppShell>
@@ -15,7 +22,11 @@ export default async function DiscoverPage() {
           Browse patterns sourced from founders, creators, and operators. Launch the studio to craft an MVP instantly.
         </p>
       </section>
-      <DiscoverClient initialPainPoints={data} />
+      <DiscoverClient
+        initialPainPoints={data}
+        categories={["All", ...categories]}
+        trending={trending}
+      />
     </AppShell>
   );
 }

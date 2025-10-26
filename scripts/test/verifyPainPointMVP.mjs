@@ -115,7 +115,11 @@ async function downloadExport(mvpId) {
       `Export failed (${response.status}): ${await response.text()}`
     );
   }
-  const size = Number(response.headers.get("content-length") ?? response.headers.get("Content-Length") ?? "0");
+  const arrayBuffer = await response.arrayBuffer();
+  const size = arrayBuffer.byteLength;
+  if (size === 0) {
+    throw new Error("Exported ZIP is empty.");
+  }
   console.log(
     chalk.green(
       `✓ MVP pack exported successfully (${size} bytes)`

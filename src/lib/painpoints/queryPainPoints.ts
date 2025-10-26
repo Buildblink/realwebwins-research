@@ -39,17 +39,21 @@ export async function queryPainPoints(filters: PainPointFilters = {}): Promise<P
     hasPlaybook = null,
     page = 1,
     pageSize = DEFAULT_PAGE_SIZE,
+    sort = "recent",
   } = filters;
 
   const effectivePageSize = pageSize ?? DEFAULT_PAGE_SIZE;
   const supabase = getSupabaseAdminClient();
 
-  let query = supabase
-    .from("pain_points")
-    .select("*", { count: "exact" })
-    .order("frequency", { ascending: false, nullsFirst: false })
-    .order("last_seen", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false });
+  let query = supabase.from("pain_points").select("*", { count: "exact" });
+
+  if (sort === "popularity") {
+    query = query.order("popularity_score", { ascending: false, nullsFirst: false });
+  } else {
+    query = query
+      .order("last_seen", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false });
+  }
 
   // Apply pagination
   query = query.range((page - 1) * effectivePageSize, page * effectivePageSize - 1);
