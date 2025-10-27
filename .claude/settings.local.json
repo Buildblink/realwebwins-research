@@ -11,7 +11,8 @@
       "Bash(npm run hybrid:refresh:*)",
       "Bash(npm run dev:*)",
       "Bash(node --env-file=.env.local -e:*)",
-      "Bash(node --env-file=.env.local scripts/fixPlaybookLinks.mjs:*)"
+      "Bash(node --env-file=.env.local scripts/fixPlaybookLinks.mjs:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

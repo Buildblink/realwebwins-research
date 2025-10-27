@@ -16,6 +16,7 @@ export interface MVPExportRecord {
   download_url: string | null;
   metadata: Record<string, unknown>;
   created_at: string;
+  viewed_at: string | null;
 }
 
 export async function logMVPExport(input: MVPExportInput): Promise<MVPExportRecord> {
@@ -58,6 +59,33 @@ export async function listMVPExports(mvpId: string): Promise<MVPExportRecord[]> 
   return (data ?? []).map(normalizeExport);
 }
 
+export async function markExportViewed(
+  exportId: string,
+  metadata: Record<string, unknown> = {}
+): Promise<MVPExportRecord> {
+  const supabase = getSupabaseAdminClient();
+  const payload: Record<string, unknown> = {
+    viewed_at: new Date().toISOString(),
+  };
+
+  if (Object.keys(metadata).length > 0) {
+    payload.metadata = metadata;
+  }
+
+  const { data, error } = await supabase
+    .from("mvp_exports")
+    .update(payload)
+    .eq("id", exportId)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`[mvp_exports] Failed to mark export viewed: ${error.message}`);
+  }
+
+  return normalizeExport(data);
+}
+
 function normalizeExport(row: Record<string, any>): MVPExportRecord {
   return {
     id: row.id,
@@ -67,5 +95,6 @@ function normalizeExport(row: Record<string, any>): MVPExportRecord {
     download_url: row.download_url ?? null,
     metadata: (row.metadata ?? {}) as Record<string, unknown>,
     created_at: row.created_at ?? new Date().toISOString(),
+    viewed_at: row.viewed_at ?? null,
   };
 }

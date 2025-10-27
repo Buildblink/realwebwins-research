@@ -229,10 +229,10 @@ function artifactSlug(type: string, fallback: string) {
 
 export async function GET(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.warn("[export.mvp] Missing service role key — skipping insert");
+    console.warn("[export.mvp] Missing service role key - skipping insert");
     return NextResponse.json(
       { success: false, message: "Missing service key" },
       { status: 500 }
@@ -240,7 +240,7 @@ export async function GET(
   }
 
   const supabase = getSupabaseAdminClient();
-  const { id } = await context.params;
+  const { id } = params;
 
 
   try {

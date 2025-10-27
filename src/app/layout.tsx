@@ -1,9 +1,10 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import "@/styles/theme.css";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
+import { ConditionalAppShell } from "@/components/layout/ConditionalAppShell";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -28,13 +29,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const currentYear = new Date().getFullYear();
   const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
 
+  // TODO: Get auth state from Supabase session
+  // For now, hardcoded - will be replaced with actual auth check
+  const isAuthenticated = false;
+  const userEmail = undefined;
+  const userTier = 'free' as const;
+
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
-        className={`${inter.variable} ${spaceGrotesk.variable} min-h-screen bg-[#060608] text-zinc-200 antialiased`}
+        className={`${inter.variable} ${spaceGrotesk.variable} antialiased`}
       >
         {plausibleDomain ? (
           <Script
@@ -43,53 +49,15 @@ export default function RootLayout({
             strategy="lazyOnload"
           />
         ) : null}
-        <main className="bg-[#060608] min-h-screen">
-          <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10">
-            <header className="mb-12 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-[#4f46e5]/70">
-                  RealWebWins
-                </p>
-                <h1 className="font-heading text-3xl font-semibold text-zinc-50 sm:text-4xl">
-                  Research System
-                </h1>
-              </div>
-            <nav className="flex gap-3 text-sm text-foreground/70">
-              <Link className="rounded-lg px-3 py-2 hover:bg-foreground/5" href="/">
-                Home
-              </Link>
-              <Link
-                className="rounded-lg px-3 py-2 hover:bg-foreground/5"
-                href="/pain-points"
-              >
-                Pain Points
-              </Link>
-              <Link
-                className="rounded-lg px-3 py-2 hover:bg-foreground/5"
-                href="/showcase"
-              >
-                Showcase
-              </Link>
-              <Link
-                className="rounded-lg px-3 py-2 hover:bg-foreground/5"
-                href="/cases"
-              >
-                Cases
-              </Link>
-              <Link
-                className="rounded-lg px-3 py-2 hover:bg-foreground/5"
-                href="/dashboard"
-              >
-                Dashboard
-              </Link>
-            </nav>
-          </header>
-            <div className="flex-1 pb-12">{children}</div>
-            <footer className="border-t border-white/10 pt-6 text-xs text-zinc-500">
-              Built with Next.js, Supabase, and Claude (mocked) - (c) {currentYear} RealWebWins
-            </footer>
-          </div>
-        </main>
+
+        <ConditionalAppShell
+          isAuthenticated={isAuthenticated}
+          userEmail={userEmail}
+          userTier={userTier}
+        >
+          {children}
+        </ConditionalAppShell>
+
         <FeedbackWidget />
       </body>
     </html>

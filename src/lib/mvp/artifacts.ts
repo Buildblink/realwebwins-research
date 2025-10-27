@@ -8,6 +8,8 @@ export interface MVPArtifactInput {
   title?: string;
   format?: string;
   content: unknown;
+  previewHtml?: string | null;
+  tier?: string | null;
   validationStatus?: ArtifactValidationStatus;
   validationErrors?: string[];
   metadata?: Record<string, unknown>;
@@ -20,6 +22,8 @@ export interface MVPArtifactRecord {
   title: string | null;
   format: string | null;
   content: unknown;
+  preview_html: string | null;
+  tier: string | null;
   validation_status: ArtifactValidationStatus;
   validation_errors: string[];
   metadata: Record<string, unknown>;
@@ -40,6 +44,8 @@ export async function createMVPArtifacts(
     title: artifact.title ?? null,
     format: artifact.format ?? null,
     content: serializeContent(artifact.content),
+    preview_html: artifact.previewHtml ?? null,
+    tier: artifact.tier ?? "core",
     validation_status: artifact.validationStatus ?? "pending",
     validation_errors: (artifact.validationErrors ?? []) as unknown,
     metadata: artifact.metadata ?? {},
@@ -87,15 +93,24 @@ export async function deleteArtifactsForMVP(mvpId: string): Promise<void> {
 export async function updateArtifactStatus(
   artifactId: string,
   status: ArtifactValidationStatus,
-  validationErrors: string[] = []
+  validationErrors: string[] = [],
+  previewHtml?: string | null,
+  tier?: string | null
 ): Promise<MVPArtifactRecord> {
   const supabase = getSupabaseAdminClient();
+  const updatePayload: Record<string, unknown> = {
+    validation_status: status,
+    validation_errors: validationErrors as unknown,
+    preview_html: previewHtml ?? null,
+  };
+
+  if (tier !== undefined) {
+    updatePayload.tier = tier;
+  }
+
   const { data, error } = await supabase
     .from("mvp_artifacts")
-    .update({
-      validation_status: status,
-      validation_errors: validationErrors as unknown,
-    })
+    .update(updatePayload)
     .eq("id", artifactId)
     .select()
     .single();
@@ -146,6 +161,8 @@ function normalizeArtifactRow(row: Record<string, any>): MVPArtifactRecord {
     title: row.title ?? null,
     format: row.format ?? null,
     content: row.content ?? {},
+    preview_html: row.preview_html ?? null,
+    tier: row.tier ?? "core",
     validation_status: (row.validation_status ?? "pending") as ArtifactValidationStatus,
     validation_errors: Array.isArray(row.validation_errors)
       ? (row.validation_errors as string[])
