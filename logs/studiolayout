@@ -1,0 +1,102 @@
+
+# Realwebwins Studio Unified Layout (AI Studio Hub)
+
+## Overview
+This document defines the unified UI for Realwebwins — merging `/discover`, `/pain/[id]`, and `/mvp/[slug]` into one seamless page.
+It details layout hierarchy, components, styling, and developer sequence for implementation.
+
+---
+
+## 🎯 Goal
+Create a single interactive environment where users can:
+1. Search or select a pain point
+2. Watch AI agents collaborate in real time
+3. View the generated MVP output
+4. Download, remix, or share — without leaving the page
+
+---
+
+## 🧩 Layout Structure
+
+```
+src/
+ ├─ app/
+ │   └─ studio/
+ │        ├─ page.tsx
+ │        └─ studio-client.tsx
+ ├─ components/
+ │   ├─ layout/
+ │   │    └─ AppShell.tsx
+ │   ├─ studio/
+ │   │    ├─ SearchPanel.tsx
+ │   │    ├─ AgentStudio.tsx
+ │   │    ├─ MVPPanel.tsx
+ │   │    └─ RecentWidget.tsx
+ └─ lib/
+     └─ state/
+          └─ useStudioStore.ts
+```
+
+---
+
+## 🧭 Page Flow
+1. **Search Section** — User browses or searches pain points.
+2. **Agent Studio** — Three animated AI agents (Researcher, Builder, Validator) discuss the selected idea.
+3. **MVP Panel** — Displays validated MVP, stack, pricing, and download/share buttons.
+4. **Recent MVPs** — Remembers last 3 generated MVPs (localStorage).
+
+---
+
+## 🎨 Visual Theme
+| Element | Style |
+|----------|--------|
+| **Theme** | Dark neon gradient (#0F1117 → #161A23) |
+| **Typography** | Inter / Geist (matches PDF NotoSans) |
+| **Animation** | Framer Motion (smooth fade + typing effects) |
+| **Buttons** | Neon hover effects (violet → teal) |
+| **Cards** | Glassmorphism, soft glow borders |
+
+---
+
+## ⚙️ Implementation Notes
+
+- Uses Zustand for shared app state (`useStudioStore`).
+- Components are modular and responsive.
+- `studio-client.tsx` handles conditional rendering for search → studio → result transitions.
+- `/api` calls remain the same; only UI changes.
+- Supports both desktop split view and mobile stacked flow.
+
+---
+
+## 🚀 Developer Sequence
+
+1. Create `AppShell` and layout grid.
+2. Build `SearchPanel` with live search + trending list.
+3. Implement `AgentStudio` with animated message feed.
+4. Build `MVPPanel` showing output + download/remix/share buttons.
+5. Add `RecentWidget` for recent MVPs from localStorage.
+6. Integrate `useStudioStore` to control all stage transitions.
+7. QA: ensure smooth flow search → studio → result → download.
+
+---
+
+## ✅ Deliverable
+A single `/studio` interface representing the Realwebwins experience:
+- Users can search pain points, generate MVPs, and download reports.
+- Fully responsive and unified under the “AI Studio Hub” design.
+- Connects directly to the verified backend and agent APIs.
+
+---
+
+### Verification
+Run:
+```
+npm run dev
+node --env-file=.env.local scripts/test/verifyPainPointMVP.mjs
+```
+Ensure the unified UI correctly displays generated MVPs and allows ZIP/PDF export.
+
+---
+
+**Tag:** `studio-layout-phase`  
+**Author:** Realwebwins Build Team (Codex Implementation Phase)

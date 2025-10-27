@@ -23,6 +23,9 @@
     "ensure:phase28-schema": "node --env-file .env.local scripts/runMigration.mjs scripts/migrations/create_phase28_leaderboard_tables.sql",
     "ensure:phase29_32-schema": "node --env-file .env.local scripts/runMigration.mjs scripts/migrations/create_phase29_32_tables.sql",
     "ensure:phase33-schema": "node --env-file .env.local scripts/runMigration.mjs scripts/migrations/create_phase33_pain_mvp_tables.sql",
+    "ensure:phase34-schema": "node --env-file .env.local scripts/runMigration.mjs scripts/migrations/create_phase34_admin_tables.sql",
+    "ensure:phase35-schema": "node --env-file .env.local scripts/runMigration.mjs scripts/migrations/create_phase35_admin_analytics.sql",
+    "ensure:phase37-schema": "node --env-file .env.local scripts/runMigration.mjs scripts/migrations/create_phase37_deliverables.sql",
     "ensure:refresh": "node --env-file .env.local scripts/scheduleResearchRefresh.mjs",
     "verify:refresh": "node --env-file .env.local scripts/verifyResearchRefresh.mjs",
     "verify:system": "node --env-file .env.local scripts/verifySystemHealth.mjs",
@@ -30,6 +33,7 @@
     "seed:pain-points": "node --env-file=.env.local scripts/seedPainPoints.mjs",
     "seed:consumer-pain-points": "node --env-file=.env.local scripts/seedConsumerPainPoints.mjs",
     "seed:playbooks": "node --env-file=.env.local scripts/seedPlaybooks.mjs",
+    "seed:architect-agent": "node --env-file=.env.local scripts/seedArchitectAgent.mjs",
     "generate:cards": "node --env-file=.env.local scripts/generateCaseCards.mjs",
     "export:feed": "node --env-file=.env.local scripts/exportFeed.mjs",
     "export:newsletter": "node --env-file=.env.local scripts/exportNewsletter.mjs",
@@ -47,6 +51,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.26.1",
+    "@google/generative-ai": "^0.24.1",
     "@radix-ui/react-slot": "^1.1.1",
     "@supabase/ssr": "^0.5.0",
     "@supabase/supabase-js": "^2.44.0",
@@ -72,7 +77,8 @@
     "resend": "^2.1.0",
     "slugify": "^1.6.6",
     "swr": "^2.3.6",
-    "tailwind-merge": "^2.5.2"
+    "tailwind-merge": "^2.5.2",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

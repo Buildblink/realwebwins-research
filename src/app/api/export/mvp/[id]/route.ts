@@ -1,9 +1,11 @@
 import JSZip from "jszip";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import PDFDocument from "pdfkit";
 import path from "path";
 import { getMVPOutput } from "@/lib/mvp/outputs";
 import { getAgentSession } from "@/lib/agents/sessions";
+import { listMVPArtifacts, type MVPArtifactRecord } from "@/lib/mvp/artifacts";
+import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
 
 function buildMarkdown(output: { title: string | null; summary: string | null; stack: string | null; pricing: string | null; risk: string | null; validation_score: number | null }) {
   return [
@@ -49,7 +51,7 @@ async function buildValidationPdf(options: {
       doc.registerFont("rw-regular", fontPath);
       doc.font("rw-regular");
       bodyFont = "rw-regular";
-      console.log("✅ PDF font loaded successfully");
+      console.log("[export.mvp] PDF font loaded successfully");
     } catch (error) {
       console.warn(
         "[export.mvp] Failed to load custom font, falling back to Times-Roman",
@@ -94,12 +96,152 @@ async function buildValidationPdf(options: {
   });
 }
 
+function appendArtifactToZip(zip: JSZip, artifact: MVPArtifactRecord) {
+  const slug = artifactSlug(artifact.artifact_type, artifact.id);
+  const basePath = `artifacts/${slug}`;
+  const files = artifactToFiles(artifact, basePath);
+
+  for (const file of files) {
+    zip.file(file.path, file.content);
+  }
+
+  const metadata = {
+    id: artifact.id,
+    type: artifact.artifact_type,
+    title: artifact.title ?? null,
+    format: artifact.format ?? null,
+    validation_status: artifact.validation_status,
+    validation_errors: artifact.validation_errors,
+    metadata: artifact.metadata,
+    created_at: artifact.created_at,
+  };
+
+  zip.file(`${basePath}.meta.json`, JSON.stringify(metadata, null, 2));
+}
+
+function artifactToFiles(artifact: MVPArtifactRecord, basePath: string) {
+  const files: Array<{ path: string; content: string }> = [];
+  const format = artifact.format ?? "text";
+  const extension = extensionForFormat(format);
+
+  if (Array.isArray(artifact.content)) {
+    const descriptors = artifact.content as Array<{
+      path?: string;
+      content?: string;
+      language?: string;
+    }>;
+    descriptors.forEach((file, index) => {
+      const relativePath = sanitizePath(
+        file.path ?? `${basePath}.${index + 1}.${extension}`
+      );
+      files.push({
+        path: relativePath.startsWith("artifacts/")
+          ? relativePath
+          : `${basePath}/bundle/${relativePath}`,
+        content: file.content ?? "",
+      });
+    });
+    return files;
+  }
+
+  if (artifact.content && typeof artifact.content === "object") {
+    const body = (artifact.content as Record<string, unknown>).body;
+    const bundle = (artifact.content as Record<string, unknown>).files;
+    if (typeof body === "string") {
+      files.push({
+        path: `${basePath}.${extension}`,
+        content: body,
+      });
+      return files;
+    }
+    if (Array.isArray(bundle)) {
+      const descriptors = bundle as Array<{ path?: string; content?: string }>;
+      descriptors.forEach((file, index) => {
+        const relativePath = sanitizePath(
+          file.path ?? `${basePath}.${index + 1}.${extension}`
+        );
+        files.push({
+          path: relativePath.startsWith("artifacts/")
+            ? relativePath
+            : `${basePath}/bundle/${relativePath}`,
+          content: file.content ?? "",
+        });
+      });
+      return files;
+    }
+
+    files.push({
+      path: `${basePath}.json`,
+      content: JSON.stringify(artifact.content, null, 2),
+    });
+    return files;
+  }
+
+  if (typeof artifact.content === "string") {
+    files.push({
+      path: `${basePath}.${extension}`,
+      content: artifact.content,
+    });
+    return files;
+  }
+
+  files.push({
+    path: `${basePath}.txt`,
+    content: String(artifact.content ?? ""),
+  });
+  return files;
+}
+
+function extensionForFormat(format: string) {
+  switch (format) {
+    case "markdown":
+      return "md";
+    case "html":
+      return "html";
+    case "json":
+    case "json-schema":
+      return "json";
+    case "typescript":
+      return "ts";
+    case "tsx":
+      return "tsx";
+    case "sql":
+      return "sql";
+    case "yaml":
+      return "yaml";
+    default:
+      return "txt";
+  }
+}
+
+function sanitizePath(value: string) {
+  return value.replace(/\.\.+/g, "_").replace(/^\/+/, "");
+}
+
+function artifactSlug(type: string, fallback: string) {
+  const sanitized = type
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return sanitized || fallback;
+}
+
 
 export async function GET(
-  _request: Request,
-  context: { params: { id: string } }
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = context.params;
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn("[export.mvp] Missing service role key — skipping insert");
+    return NextResponse.json(
+      { success: false, message: "Missing service key" },
+      { status: 500 }
+    );
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { id } = await context.params;
+
 
   try {
     const output = await getMVPOutput(id);
@@ -111,6 +253,7 @@ export async function GET(
     }
 
     const session = await getAgentSession(output.session_id);
+    const artifacts = await listMVPArtifacts(output.id);
     const zip = new JSZip();
 
     zip.file("MVP.md", buildMarkdown(output));
@@ -140,7 +283,74 @@ export async function GET(
       )
     );
 
+    const agentsUsed = Array.isArray((session.metadata as Record<string, unknown> | null)?.agents_used)
+      ? ((session.metadata as { agents_used?: Array<Record<string, unknown>> }).agents_used ?? [])
+      : [];
+
+    zip.file("agents_used.json", JSON.stringify(agentsUsed, null, 2));
+
+    const totals = agentsUsed.reduce(
+      (acc, entry) => {
+        const duration = typeof entry?.duration_ms === "number" ? entry.duration_ms : 0;
+        const tokens = typeof entry?.tokens === "number" ? entry.tokens : 0;
+        return {
+          duration: acc.duration + duration,
+          tokens: acc.tokens + tokens,
+        };
+      },
+      { duration: 0, tokens: 0 }
+    );
+
+    const statsLines = [
+      `MVP ID: ${output.id}`,
+      `Session ID: ${session.id}`,
+      `Generated At: ${output.created_at ?? "unknown"}`,
+      `Agents Invoked: ${agentsUsed.length}`,
+      `Total Duration (ms): ${totals.duration}`,
+      `Total Tokens: ${totals.tokens}`,
+    ];
+    zip.file("stats.txt", statsLines.join("\n"));
+
+    if (artifacts.length > 0) {
+      const summary = artifacts.map((artifact) => ({
+        id: artifact.id,
+        type: artifact.artifact_type,
+        title: artifact.title,
+        format: artifact.format,
+        validation_status: artifact.validation_status,
+        created_at: artifact.created_at,
+      }));
+      zip.file("artifacts/index.json", JSON.stringify(summary, null, 2));
+      for (const artifact of artifacts) {
+        appendArtifactToZip(zip, artifact);
+      }
+    }
+
     const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+    const exportMeta = {
+      mvp_id: output.id,
+      export_type: "zip",
+      tier: output.deliverable_mode ?? "free",
+      download_url: req.url,
+      metadata: {
+        filename: `mvp-${output.id}.zip`,
+        artifact_count: artifacts.length,
+        agent_count: agentsUsed.length,
+        generated_at: new Date().toISOString(),
+      },
+    };
+
+    console.log("[export.mvp] attempting insert", exportMeta);
+    const { data: insertData, error: insertError } = await supabase
+      .from("mvp_exports")
+      .insert([exportMeta])
+      .select();
+    if (insertError) {
+      console.error("[export.mvp] insert failed", insertError);
+    } else {
+      console.log("[export.mvp] insert success", insertData);
+    }
 
     return new NextResponse(buffer, {
       status: 200,
